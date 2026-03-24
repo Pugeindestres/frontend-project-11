@@ -1,35 +1,43 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RSS Aggregator</title>
+  <title>RSS Агрегатор</title>
   <link rel="stylesheet" href="/src/styles.css">
 </head>
 <body>
   <div class="container mt-5">
     <div class="row justify-content-center">
       <div class="col-md-8">
-        <h1 class="text-center mb-4">RSS Aggregator</h1>
+        <h1 class="text-center mb-4">RSS Агрегатор</h1>
+        <p class="lead text-center text-muted mb-4">Начните читать RSS сегодня! Это легко и удобно.</p>
         
         <form id="rss-form">
           <div class="mb-3">
-            <label for="url-input" class="form-label">RSS URL</label>
+            <label for="url-input" class="form-label">Ссылка RSS</label>
             <input 
               type="url" 
               class="form-control" 
               id="url-input" 
               placeholder="https://example.com/rss.xml"
-              required
+              autofocus
             >
-            <div class="invalid-feedback">
-              Please enter a valid URL
-            </div>
+            <div id="error-message" class="invalid-feedback" style="display: none;"></div>
           </div>
-          <button type="submit" class="btn btn-primary w-100">Add RSS</button>
+          <button type="submit" id="submit-btn" class="btn btn-primary w-100">Добавить</button>
         </form>
         
-        <div id="feeds" class="mt-4"></div>
+        <div class="row mt-5">
+          <div class="col-md-6">
+            <h2 id="feeds-title" class="h4 mb-3">Фиды</h2>
+            <div id="feeds-container"></div>
+          </div>
+          <div class="col-md-6">
+            <h2 id="posts-title" class="h4 mb-3">Посты</h2>
+            <div id="posts-container" class="list-group"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

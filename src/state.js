@@ -2,6 +2,7 @@ import { proxy } from 'valtio/vanilla'
 
 const state = proxy({
   feeds: [],
+  posts: [],
   form: {
     url: '',
     isValid: true,
