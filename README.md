@@ -12,7 +12,7 @@ RSS Aggregator — это веб-приложение для чтения RSS-п
 
 ## Ссылка на сайт
 
-[Демо](https://your-project.vercel.app)
+[Демо](https://frontend-project-11-inky-sigma.vercel.app/)
 
 ## Установка и запуск
 
