@@ -4,7 +4,7 @@
 # RSS Aggregator
 
 [![CI](https://github.com/your-username/frontend-project-46/actions/workflows/ci.yml/badge.svg)](https://github.com/your-username/frontend-project-46/actions/workflows/ci.yml)
-[![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=your-project&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=your-project)
+[![Maintainability](frontend-project-11-7rd608cwq-pugeindestres-projects.vercel.app)](https://sonarcloud.io/dashboard?id=your-project)
 
 ## Описание
 
