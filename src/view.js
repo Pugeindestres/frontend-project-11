@@ -19,10 +19,6 @@ const headings = {
   modalGoal: 'Цель: Научиться извлекать из дерева необходимые данные'
 };
 
-const getFeedbackElement = () => {
-  return document.querySelector('.feedback');
-};
-
 const getInputElement = () => {
   return document.querySelector('#rssUrl');
 };
@@ -74,28 +70,16 @@ export const setLoading = (isLoading) => {
 };
 
 export const setSuccess = (messageKey) => {
-  console.log('=== setSuccess called, messageKey:', messageKey);
-  
   const feedback = document.getElementById('rssFeedback');
-  console.log('Feedback element:', feedback);
-  
   if (feedback) {
-    const message = 'RSS успешно загружен';
-    feedback.textContent = message;
+    feedback.textContent = headings.successLoad;
     feedback.classList.remove('text-danger');
     feedback.classList.add('text-success');
-    feedback.style.display = 'block';
-    feedback.style.visibility = 'visible';
-    feedback.style.opacity = '1';
-    
-    console.log('Message set, textContent:', feedback.textContent);
     
     setTimeout(() => {
-      if (feedback && feedback.textContent === message) {
+      if (feedback && feedback.textContent === headings.successLoad) {
         feedback.textContent = '';
         feedback.classList.remove('text-success');
-        feedback.style.display = '';
-        console.log('Message cleared after 5 seconds');
       }
     }, 5000);
   }
@@ -105,8 +89,6 @@ export const setError = (message) => {
   const input = getInputElement();
   const feedback = document.getElementById('rssFeedback');
   
-  console.log('=== setError called, message:', message);
-  
   if (input) {
     input.classList.add('is-invalid');
   }
@@ -114,15 +96,11 @@ export const setError = (message) => {
     feedback.textContent = message;
     feedback.classList.remove('text-success');
     feedback.classList.add('text-danger');
-    feedback.style.display = 'block';
-    console.log('Error message set to:', feedback.textContent);
     
     setTimeout(() => {
       if (feedback && feedback.textContent === message) {
         feedback.textContent = '';
         feedback.classList.remove('text-danger');
-        feedback.style.display = '';
-        console.log('Error message cleared after 5 seconds');
       }
     }, 5000);
   }
@@ -135,7 +113,7 @@ export const clearError = () => {
   if (input) {
     input.classList.remove('is-invalid');
   }
-  if (feedback && feedback.textContent !== 'RSS успешно загружен') {
+  if (feedback && feedback.textContent !== headings.successLoad) {
     feedback.textContent = '';
     feedback.classList.remove('text-danger');
   }
@@ -150,121 +128,116 @@ export const resetForm = () => {
 };
 
 export const renderFeeds = (container, feeds) => {
-  console.log('=== renderFeeds called ===');
-  console.log('Container:', container);
-  console.log('Feeds count:', feeds?.length);
-  console.log('Feeds:', feeds);
-  
   if (!container) return;
   
+  // Очищаем контейнер
+  container.innerHTML = '';
+  
+  // Создаём контейнер с классом "feeds"
+  const feedsContainer = document.createElement('div');
+  feedsContainer.className = 'feeds';
+  
   if (!feeds || feeds.length === 0) {
-    console.log('No feeds to display');
-    container.innerHTML = `
-      <div class="feeds">
-        <div class="card">
-          <div class="card-body">
-            <h3>${headings.feedsTitle}</h3>
-            <p class="text-muted">Нет добавленных RSS</p>
-          </div>
-        </div>
-      </div>
-    `;
-    return;
-  }
-  
-  console.log('Rendering', feeds.length, 'feeds');
-  
-  container.innerHTML = `
-    <div class="feeds">
+    feedsContainer.innerHTML = `
       <div class="card">
         <div class="card-body">
           <h3>${headings.feedsTitle}</h3>
-          <ul class="list-group">
-            ${feeds.map(feed => `
-              <li class="list-group-item">
-                <strong>${escapeHtml(feed.title || 'Без названия')}</strong>
-                ${feed.description ? `<br><small class="text-muted">${escapeHtml(feed.description)}</small>` : ''}
-              </li>
-            `).join('')}
-          </ul>
+          <p class="text-muted">Нет добавленных RSS</p>
         </div>
+      </div>
+    `;
+    container.appendChild(feedsContainer);
+    return;
+  }
+  
+  feedsContainer.innerHTML = `
+    <div class="card">
+      <div class="card-body">
+        <h3>${headings.feedsTitle}</h3>
+        <ul class="list-group">
+          ${feeds.map(feed => `
+            <li class="list-group-item">
+              <strong>${escapeHtml(feed.title)}</strong>
+              ${feed.description ? `<br><small class="text-muted">${escapeHtml(feed.description)}</small>` : ''}
+            </li>
+          `).join('')}
+        </ul>
       </div>
     </div>
   `;
   
-  console.log('Feeds rendered successfully');
+  container.appendChild(feedsContainer);
 };
 
 export const renderPosts = (container, posts, onPreviewClick) => {
-  console.log('=== renderPosts called ===');
-  console.log('Container:', container);
-  console.log('Posts count:', posts?.length);
-  console.log('First post:', posts?.[0]);
-  
   if (!container) return;
   
+  // Очищаем контейнер
+  container.innerHTML = '';
+  
+  // Создаём контейнер с классом "posts"
+  const postsContainer = document.createElement('div');
+  postsContainer.className = 'posts';
+  
   if (!posts || posts.length === 0) {
-    console.log('No posts to display');
-    container.innerHTML = `
-      <div class="posts">
-        <div class="card">
-          <div class="card-body">
-            <h3>${headings.postsTitle}</h3>
-            <p class="text-muted">Нет постов</p>
-          </div>
+    postsContainer.innerHTML = `
+      <div class="card">
+        <div class="card-body">
+          <h3>${headings.postsTitle}</h3>
+          <p class="text-muted">Нет постов</p>
         </div>
       </div>
     `;
+    container.appendChild(postsContainer);
     return;
   }
-  
-  console.log('Rendering', posts.length, 'posts');
   
   const sortedPosts = [...posts].sort((a, b) => 
     new Date(b.pubDate) - new Date(a.pubDate)
   );
   
-  container.innerHTML = `
-    <div class="posts">
-      <div class="card">
-        <div class="card-body">
-          <h3>${headings.postsTitle}</h3>
-          ${sortedPosts.map(post => `
-            <div class="post-item mb-3 p-3 border rounded" data-post-id="${post.id}">
-              <div class="d-flex justify-content-between align-items-start">
-                <h4 class="post-title">
-                  <a href="${post.link || '#'}" target="_blank" class="${post.isRead ? 'link-secondary' : 'fw-bold'}">
-                    ${escapeHtml(post.title || 'Без названия')}
-                  </a>
-                </h4>
-                <button class="btn btn-sm btn-outline-secondary preview-btn" data-post-id="${post.id}">
-                  ${headings.previewButton}
-                </button>
-              </div>
-              <div class="post-meta text-muted small mt-2">
-                <span class="feed-title">${escapeHtml(post.feedTitle || '')}</span>
-                <span class="post-date ms-2">${formatDate(post.pubDate)}</span>
-              </div>
-              <p class="mt-2">${escapeHtml(post.description?.substring(0, 200) || 'Нет описания')}...</p>
+  postsContainer.innerHTML = `
+    <div class="card">
+      <div class="card-body">
+        <h3>${headings.postsTitle}</h3>
+        ${sortedPosts.map(post => `
+          <div class="post-item mb-3 p-3 border rounded" data-post-id="${post.id}">
+            <div class="d-flex justify-content-between align-items-start">
+              <h4 class="post-title">
+                <a href="${post.link || '#'}" target="_blank" class="${post.isRead ? 'link-secondary' : 'fw-bold'}">
+                  ${escapeHtml(post.title)}
+                </a>
+              </h4>
+              <button class="btn btn-sm btn-outline-secondary preview-btn" data-post-id="${post.id}">
+                ${headings.previewButton}
+              </button>
             </div>
-          `).join('')}
-        </div>
+            <div class="post-meta text-muted small mt-2">
+              <span class="feed-title">${escapeHtml(post.feedTitle || '')}</span>
+              <span class="post-date ms-2">${formatDate(post.pubDate)}</span>
+            </div>
+            <p class="mt-2">${escapeHtml(post.description?.substring(0, 200) || '')}...</p>
+          </div>
+        `).join('')}
       </div>
     </div>
   `;
   
-  console.log('Posts rendered successfully');
+  container.appendChild(postsContainer);
   
   if (onPreviewClick) {
     document.querySelectorAll('.preview-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.removeEventListener('click', btn._listener);
+      const handler = (e) => {
         e.preventDefault();
         const postId = btn.dataset.postId;
-        const post = posts.find(p => p.id === postId);
+        const post = sortedPosts.find(p => p.id === postId);
         if (post && onPreviewClick) {
           onPreviewClick(post);
         }
-      });
+      };
+      btn._listener = handler;
+      btn.addEventListener('click', handler);
     });
   }
 };
