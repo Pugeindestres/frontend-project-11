@@ -26,7 +26,6 @@ function createModalElement() {
   document.body.insertAdjacentHTML('beforeend', modalHTML);
   const modal = document.getElementById('postModal');
   
-  // Добавляем обработчики для закрытия
   const closeBtn = modal.querySelector('.close-modal-btn');
   const closeX = modal.querySelector('.btn-close');
   
@@ -39,7 +38,6 @@ function createModalElement() {
   closeBtn.addEventListener('click', closeModal);
   closeX.addEventListener('click', closeModal);
   
-  // Закрытие при клике на фон
   modal.addEventListener('click', (e) => {
     if (e.target === modal) {
       closeModal();
@@ -49,14 +47,12 @@ function createModalElement() {
   return modal;
 }
 
-// Открытие модального окна
 function openModal(modal) {
   modal.classList.add('show');
   modal.style.display = 'block';
   document.body.classList.add('modal-open');
 }
 
-// Открытие модалки с постом
 function openPostModal(post) {
   let modal = document.getElementById('postModal');
   
@@ -75,7 +71,6 @@ function openPostModal(post) {
   openModal(modal);
 }
 
-// Отрисовка формы добавления RSS
 export function renderRSSForm(container) {
   if (!container) return;
   
@@ -85,7 +80,12 @@ export function renderRSSForm(container) {
         <div class="mb-3">
           <label for="rssUrl" class="form-label">${ru.rssLabel}</label>
           <div class="input-group">
-            <input type="url" class="form-control" id="rssUrl" placeholder="https://example.com/rss">
+            <input 
+              type="url" 
+              class="form-control" 
+              id="rssUrl" 
+              aria-label="url"
+              placeholder="https://example.com/rss">
             <button class="btn btn-primary" id="addRssBtn" type="button">${ru.addButton}</button>
           </div>
           <div id="rssFeedback" class="form-text"></div>
@@ -95,7 +95,6 @@ export function renderRSSForm(container) {
   `;
 }
 
-// Отрисовка списка фидов
 export function renderFeeds(feeds) {
   const container = document.getElementById('feedsContainer');
   if (!container) return;
@@ -129,7 +128,6 @@ export function renderFeeds(feeds) {
   `;
 }
 
-// Отрисовка списка постов
 export function renderPosts() {
   const container = document.getElementById('postsContainer');
   if (!container) return;
@@ -179,7 +177,6 @@ export function renderPosts() {
     </div>
   `;
   
-  // Добавляем обработчики на кнопки просмотра
   document.querySelectorAll('.preview-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -201,7 +198,6 @@ export function renderPosts() {
   });
 }
 
-// Показ сообщений об ошибках/успехе
 export function showFeedback(message, isError = false) {
   const feedbackDiv = document.getElementById('rssFeedback');
   if (feedbackDiv) {
@@ -216,7 +212,6 @@ export function showFeedback(message, isError = false) {
   }
 }
 
-// Вспомогательные функции
 function escapeHtml(str) {
   if (!str) return '';
   return str
