@@ -1,4 +1,3 @@
-// src/view.js
 import i18next from 'i18next';
 
 export const renderForm = (container, isLoading = false, errorKey = null) => {
@@ -27,17 +26,20 @@ export const renderForm = (container, isLoading = false, errorKey = null) => {
             ${i18next.t('addButton')}
           </button>
         </div>
-        <div id="rssFeedback" class="feedback ${errorKey ? 'text-danger' : ''}">
-          ${errorMessage}
-        </div>
+        <div class="feedback ${errorKey ? 'text-danger' : ''}"></div>
       </div>
     </form>
   `;
   
   const form = container.querySelector('#rssForm');
   const input = container.querySelector('#rssUrl');
+  const feedback = container.querySelector('.feedback');
   
-  return { form, input };
+  if (errorMessage && feedback) {
+    feedback.textContent = errorMessage;
+  }
+  
+  return { form, input, feedback };
 };
 
 export const renderFeeds = (container, feeds) => {
@@ -67,7 +69,6 @@ export const renderFeeds = (container, feeds) => {
               <li class="list-group-item">
                 <strong>${escapeHtml(feed.title)}</strong>
                 ${feed.description ? `<br><small class="text-muted">${escapeHtml(feed.description)}</small>` : ''}
-                <br><small class="text-muted">${escapeHtml(feed.url)}</small>
               </li>
             `).join('')}
           </ul>
@@ -94,7 +95,6 @@ export const renderPosts = (container, posts, onPreviewClick) => {
     return;
   }
   
-  // Сортируем посты по дате (новые сверху)
   const sortedPosts = [...posts].sort((a, b) => 
     new Date(b.pubDate) - new Date(a.pubDate)
   );
@@ -118,7 +118,6 @@ export const renderPosts = (container, posts, onPreviewClick) => {
               </div>
               <div class="post-meta text-muted small mt-2">
                 <span class="feed-title">${escapeHtml(post.feedTitle || '')}</span>
-                <span class="post-date ms-2">${formatDate(post.pubDate)}</span>
               </div>
               <p class="mt-2">${escapeHtml(post.description?.substring(0, 200) || '')}...</p>
             </div>
@@ -128,7 +127,6 @@ export const renderPosts = (container, posts, onPreviewClick) => {
     </div>
   `;
   
-  // Добавляем обработчики для кнопок предпросмотра
   if (onPreviewClick) {
     document.querySelectorAll('.preview-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -143,44 +141,48 @@ export const renderPosts = (container, posts, onPreviewClick) => {
   }
 };
 
-export const clearError = (container) => {
-  const feedback = container?.querySelector('#rssFeedback');
-  const input = container?.querySelector('#rssUrl');
+export const setError = (formElements, errorKey) => {
+  if (!formElements) return;
+  const { input, feedback } = formElements;
   
-  if (feedback) {
-    feedback.textContent = '';
-    feedback.classList.remove('text-danger');
-  }
   if (input) {
-    input.classList.remove('is-invalid');
+    input.classList.add('is-invalid');
   }
-};
-
-export const setError = (container, errorKey) => {
-  const feedback = container?.querySelector('#rssFeedback');
-  const input = container?.querySelector('#rssUrl');
-  
   if (feedback) {
     feedback.textContent = i18next.t(errorKey);
     feedback.classList.add('text-danger');
   }
+};
+
+export const clearError = (formElements) => {
+  if (!formElements) return;
+  const { input, feedback } = formElements;
+  
   if (input) {
-    input.classList.add('is-invalid');
+    input.classList.remove('is-invalid');
+  }
+  if (feedback) {
+    feedback.textContent = '';
+    feedback.classList.remove('text-danger');
   }
 };
 
-// Форматирование даты
-function formatDate(dateString) {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toLocaleString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
+export const showSuccess = (formElements, messageKey) => {
+  if (!formElements) return;
+  const { feedback } = formElements;
+  
+  if (feedback) {
+    feedback.textContent = i18next.t(messageKey);
+    feedback.classList.add('text-success');
+    
+    setTimeout(() => {
+      if (feedback.textContent === i18next.t(messageKey)) {
+        feedback.textContent = '';
+        feedback.classList.remove('text-success');
+      }
+    }, 5000);
+  }
+};
 
 function escapeHtml(str) {
   if (!str) return '';
