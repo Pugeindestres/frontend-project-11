@@ -17,14 +17,15 @@ export async function addRSSFeed(url) {
   }
   
   try {
-    const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+    const proxyUrl = `/proxy/get?url=${encodeURIComponent(url)}`;
+    const response = await fetch(proxyUrl);
     
     if (!response.ok) {
       throw new Error('Network error');
     }
     
     const data = await response.json();
-    const text = data.contents;
+    const text = data.contents || data;
     
     const rssValidation = validateRSSContent(text);
     
@@ -83,13 +84,15 @@ function parsePosts(xmlDoc, feedId, feedTitle) {
   return posts;
 }
 
+// ДОБАВЬТЕ ЭТУ ФУНКЦИЮ:
 export async function loadPosts(url, options = {}) {
   const { skipExisting = false, lastPostDate = null } = options;
   
   try {
-    const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+    const proxyUrl = `/proxy/get?url=${encodeURIComponent(url)}`;
+    const response = await fetch(proxyUrl);
     const data = await response.json();
-    const text = data.contents;
+    const text = data.contents || data;
     
     const rssValidation = validateRSSContent(text);
     
