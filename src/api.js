@@ -17,7 +17,6 @@ export async function addRSSFeed(url) {
   }
   
   try {
-    // Используем allorigins.win для обхода CORS
     const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
     
     if (!response.ok) {
@@ -88,7 +87,6 @@ export async function loadPosts(url, options = {}) {
   const { skipExisting = false, lastPostDate = null } = options;
   
   try {
-    // Используем allorigins.win для обхода CORS
     const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
     const data = await response.json();
     const text = data.contents;
@@ -105,11 +103,12 @@ export async function loadPosts(url, options = {}) {
     let posts = parsePosts(xmlDoc, null, feedTitle);
     
     if (skipExisting) {
-      // Получаем существующие посты из state
-      const { getPosts } = await import('./state.js');
-      const existingPosts = getPosts();
-      const existingUrls = new Set(existingPosts.map(p => p.link));
-      posts = posts.filter(post => !existingUrls.has(post.link));
+      const saved = localStorage.getItem('rss-aggregator');
+      if (saved) {
+        const savedData = JSON.parse(saved);
+        const existingUrls = new Set(savedData.posts?.map(p => p.link) || []);
+        posts = posts.filter(post => !existingUrls.has(post.link));
+      }
     }
     
     if (lastPostDate) {

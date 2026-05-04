@@ -23,16 +23,16 @@ export function validateRSSContent(xmlText) {
     
     const parserError = xmlDoc.querySelector('parsererror');
     if (parserError) {
-      return { isValid: false, error: ru.noValidRSS };
+      return { isValid: false, error: ru.noValidRSS, xmlDoc: null };
     }
     
     const channel = xmlDoc.querySelector('channel');
     if (!channel) {
-      return { isValid: false, error: ru.noValidRSS };
+      return { isValid: false, error: ru.noValidRSS, xmlDoc: null };
     }
     
     return { isValid: true, error: null, xmlDoc };
   } catch {
-    return { isValid: false, error: ru.noValidRSS };
+    return { isValid: false, error: ru.noValidRSS, xmlDoc: null };
   }
 }

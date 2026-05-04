@@ -10,7 +10,6 @@ const subscribers = {
   readPosts: [],
 };
 
-// Инициализация из localStorage
 export function initState() {
   const saved = localStorage.getItem('rss-aggregator');
   if (saved) {
@@ -25,7 +24,6 @@ export function initState() {
   }
 }
 
-// Сохранение в localStorage
 function saveState() {
   const toSave = {
     feeds: state.feeds,
@@ -35,7 +33,6 @@ function saveState() {
   localStorage.setItem('rss-aggregator', JSON.stringify(toSave));
 }
 
-// Подписка на изменения
 export function subscribe(event, callback) {
   if (!subscribers[event]) {
     subscribers[event] = [];
@@ -49,7 +46,6 @@ function notify(event, data) {
   }
 }
 
-// Getters
 export function getFeeds() {
   return [...state.feeds];
 }
@@ -69,7 +65,6 @@ export function isRead(postId) {
   return state.readPosts.has(postId);
 }
 
-// Добавление фида
 export function addFeed(feed) {
   const exists = state.feeds.some(f => f.url === feed.url);
   if (!exists) {
@@ -81,7 +76,6 @@ export function addFeed(feed) {
   return false;
 }
 
-// Добавление постов
 export function addPosts(feedId, newPosts) {
   const existingIds = new Set(state.posts.map(p => p.id));
   const postsToAdd = newPosts
@@ -101,7 +95,6 @@ export function addPosts(feedId, newPosts) {
   return postsToAdd.length;
 }
 
-// Отметка как прочитанного
 export function markAsRead(postId) {
   if (!state.readPosts.has(postId)) {
     state.readPosts.add(postId);

@@ -2,10 +2,11 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import './styles.css';
 
-import { initState, subscribe, getPostsWithReadStatus } from './state.js';
+import { initState, subscribe } from './state.js';  // убрали getPostsWithReadStatus
 import { renderRSSForm, renderFeeds, renderPosts, showFeedback } from './view.js';
-import { startUpdater, forceUpdate } from './updater.js';
+import { startUpdater } from './updater.js';
 import { addRSSFeed } from './api.js';
+import ru from './locales.js';
 
 async function init() {
   initState();
@@ -14,23 +15,25 @@ async function init() {
   if (rssFormContainer) {
     renderRSSForm(rssFormContainer);
     
-    const addBtn = document.getElementById('addRssBtn');
+    const form = document.getElementById('rssForm');
     const urlInput = document.getElementById('rssUrl');
     
-    if (addBtn && urlInput) {
-      addBtn.addEventListener('click', async () => {
+    if (form && urlInput) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
         const url = urlInput.value.trim();
+        
         if (url) {
+          const submitBtn = form.querySelector('button[type="submit"]');
+          submitBtn.disabled = true;
+          
           await addRSSFeed(url);
           urlInput.value = '';
+          
+          submitBtn.disabled = false;
+          urlInput.focus();
         } else {
-          showFeedback('Не должно быть пустым', true);
-        }
-      });
-      
-      urlInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-          addBtn.click();
+          showFeedback(ru.notEmpty, true);
         }
       });
     }
@@ -38,24 +41,13 @@ async function init() {
   
   subscribe('feeds', renderFeeds);
   subscribe('posts', () => {
-    const posts = getPostsWithReadStatus();
-    renderPosts(posts);
+    renderPosts();
   });
   
   startUpdater(5000);
   
-  const refreshBtn = document.getElementById('refreshBtn');
-  if (refreshBtn) {
-    refreshBtn.addEventListener('click', async () => {
-      refreshBtn.disabled = true;
-      await forceUpdate();
-      refreshBtn.disabled = false;
-    });
-  }
-  
-  // Начальная отрисовка
   renderFeeds([]);
-  renderPosts([]);
+  renderPosts();
 }
 
 init();
