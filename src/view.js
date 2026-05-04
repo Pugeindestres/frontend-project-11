@@ -24,16 +24,23 @@ const fallbackMessages = {
 
 // Безопасная функция получения перевода
 const t = (key) => {
-  try {
-    const result = i18next.t(key);
-    // Если i18next вернул ключ вместо значения (не инициализирован)
-    if (result === key) {
-      return fallbackMessages[key] || key;
-    }
-    return result;
-  } catch (e) {
-    return fallbackMessages[key] || key;
-  }
+  const messages = {
+    rssLabel: 'Ссылка RSS',
+    addButton: 'Добавить',
+    previewButton: 'Просмотр',
+    closeButton: 'Закрыть',
+    readFullButton: 'Читать полностью',
+    feedsTitle: 'Фиды',
+    postsTitle: 'Посты',
+    successLoad: 'RSS успешно загружен',
+    alreadyExists: 'RSS уже существует',
+    notEmpty: 'Не должно быть пустым',
+    invalidUrl: 'Ссылка должна быть валидным URL',
+    noValidRSS: 'Ресурс не содержит валидный RSS',
+    networkError: 'Ошибка сети',
+    modalGoal: 'Цель: Научиться извлекать из дерева необходимые данные'
+  };
+  return messages[key] || key;
 };
 
 // Функция для получения элемента фидбека (всегда актуальный)
