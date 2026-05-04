@@ -1,34 +1,34 @@
+import ru from './locales.js';
+import { validateUrl, validateRSSContent } from './validator.js';
+import { getFeeds, addFeed, addPosts } from './state.js';
+import { showFeedback } from './view.js';
+
 export async function addRSSFeed(url) {
-  console.log('addRSSFeed called with:', url); // Отладка
-  
   const urlValidation = validateUrl(url);
   if (!urlValidation.isValid) {
-    console.log('URL validation failed:', urlValidation.error); // Отладка
     showFeedback(urlValidation.error, true);
     return false;
   }
   
   const feeds = getFeeds();
-  console.log('Current feeds:', feeds); // Отладка
-  
   if (feeds.some(feed => feed.url === url)) {
-    console.log('Feed already exists'); // Отладка
     showFeedback(ru.alreadyExists, true);
     return false;
   }
   
   try {
-    console.log('Fetching RSS from:', url); // Отладка
     const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+    
+    if (!response.ok) {
+      throw new Error('Network error');
+    }
+    
     const data = await response.json();
     const text = data.contents;
-    
-    console.log('RSS fetched, length:', text.length); // Отладка
     
     const rssValidation = validateRSSContent(text);
     
     if (!rssValidation.isValid) {
-      console.log('RSS validation failed:', rssValidation.error); // Отладка
       showFeedback(rssValidation.error, true);
       return false;
     }
@@ -36,8 +36,6 @@ export async function addRSSFeed(url) {
     const { xmlDoc } = rssValidation;
     const channel = xmlDoc.querySelector('channel');
     const title = channel.querySelector('title')?.textContent || url;
-    
-    console.log('Feed title:', title); // Отладка
     
     const feed = {
       id: Date.now().toString(),
@@ -49,17 +47,77 @@ export async function addRSSFeed(url) {
     addFeed(feed);
     
     const posts = parsePosts(xmlDoc, feed.id, title);
-    console.log('Posts parsed:', posts.length); // Отладка
-    
     addPosts(feed.id, posts);
     
     showFeedback(ru.successLoad, false);
-    console.log('RSS added successfully!'); // Отладка
     return true;
     
   } catch (error) {
-    console.error('Error in addRSSFeed:', error); // Отладка
+    console.error('Error adding RSS:', error);
     showFeedback(ru.networkError, true);
     return false;
+  }
+}
+
+function parsePosts(xmlDoc, feedId, feedTitle) {
+  const items = xmlDoc.querySelectorAll('item');
+  const posts = [];
+  
+  items.forEach(item => {
+    const title = item.querySelector('title')?.textContent || '';
+    const link = item.querySelector('link')?.textContent || '';
+    const description = item.querySelector('description')?.textContent || '';
+    const pubDateStr = item.querySelector('pubDate')?.textContent || '';
+    const pubDate = new Date(pubDateStr);
+    
+    posts.push({
+      id: `${feedId}_${Date.now()}_${Math.random()}`,
+      title,
+      link,
+      description,
+      pubDate: isNaN(pubDate.getTime()) ? new Date() : pubDate,
+      feedTitle,
+    });
+  });
+  
+  return posts;
+}
+
+export async function loadPosts(url, options = {}) {
+  const { skipExisting = false, lastPostDate = null } = options;
+  
+  try {
+    const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+    const data = await response.json();
+    const text = data.contents;
+    
+    const rssValidation = validateRSSContent(text);
+    
+    if (!rssValidation.isValid) {
+      return [];
+    }
+    
+    const { xmlDoc } = rssValidation;
+    const channel = xmlDoc.querySelector('channel');
+    const feedTitle = channel.querySelector('title')?.textContent || url;
+    let posts = parsePosts(xmlDoc, null, feedTitle);
+    
+    if (skipExisting) {
+      const saved = localStorage.getItem('rss-aggregator');
+      if (saved) {
+        const savedData = JSON.parse(saved);
+        const existingUrls = new Set((savedData.posts || []).map(p => p.link));
+        posts = posts.filter(post => !existingUrls.has(post.link));
+      }
+    }
+    
+    if (lastPostDate) {
+      posts = posts.filter(post => new Date(post.pubDate) > lastPostDate);
+    }
+    
+    return posts;
+  } catch (error) {
+    console.error('Error loading posts:', error);
+    return [];
   }
 }
