@@ -47,3 +47,35 @@
 .list-group-item {
   word-break: break-all;
 }
+
+.text-danger {
+  color: #dc3545 !important;
+}
+
+.text-success {
+  color: #198754 !important;
+}
+
+.is-invalid {
+  border-color: #dc3545 !important;
+}
+
+.feedback {
+  margin-top: 8px;
+  font-size: 14px;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.text-danger {
+  color: #dc3545 !important;
+}
+
+.text-success {
+  color: #198754 !important;
+}
+
+.is-invalid {
+  border-color: #dc3545 !important;
+}

@@ -22,6 +22,7 @@ export default async () => {
   console.log('Test translation "successLoad":', i18n.t('successLoad'));
   console.log('Test translation "notEmpty":', i18n.t('notEmpty'));
 
+  // ========== ЭТОТ КОД УЖЕ ЕСТЬ ==========
   yup.setLocale({
     mixed: {
       required: () => ({ key: 'notEmpty' }),
@@ -31,6 +32,7 @@ export default async () => {
       url: () => ({ key: 'invalidUrl' })
     }
   });
+  // =======================================
 
   console.log('yup locale configured');
   console.log('=== i18n INITIALIZATION COMPLETE ===');

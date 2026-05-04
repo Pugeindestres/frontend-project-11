@@ -13,8 +13,7 @@ export const loadRSS = (url) => {
         throw new Error('networkError');
       }
       const content = response.data.contents;
-      const parsed = parseRSS(content);
-      return parsed;
+      return parseRSS(content);
     })
     .catch(error => {
       if (error.message === 'noValidRSS') throw error;

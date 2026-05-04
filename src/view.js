@@ -1,10 +1,7 @@
-import i18next from 'i18next';
-
 let currentForm = null;
 let currentInput = null;
 let currentSubmitBtn = null;
 
-// Прямые заголовки (без i18next)
 const headings = {
   feedsTitle: 'Фиды',
   postsTitle: 'Посты',
@@ -22,17 +19,14 @@ const headings = {
   modalGoal: 'Цель: Научиться извлекать из дерева необходимые данные'
 };
 
-// Функция для получения элемента фидбека
 const getFeedbackElement = () => {
   return document.querySelector('.feedback');
 };
 
-// Функция для получения элемента инпута
 const getInputElement = () => {
   return document.querySelector('#rssUrl');
 };
 
-// Функция для получения кнопки
 const getSubmitButton = () => {
   return document.querySelector('#submitBtn');
 };
@@ -46,7 +40,7 @@ export const initForm = (container) => {
         <label for="rssUrl" class="form-label">${headings.rssLabel}</label>
         <div class="input-group">
           <input 
-            type="url" 
+            type="text" 
             class="form-control" 
             id="rssUrl" 
             name="url"
@@ -60,7 +54,7 @@ export const initForm = (container) => {
             ${headings.addButton}
           </button>
         </div>
-        <div class="feedback"></div>
+        <div id="rssFeedback" class="feedback form-text"></div>
       </div>
     </form>
   `;
@@ -80,49 +74,71 @@ export const setLoading = (isLoading) => {
 };
 
 export const setSuccess = (messageKey) => {
-  const feedback = getFeedbackElement();
+  console.log('=== setSuccess called, messageKey:', messageKey);
+  
+  const feedback = document.getElementById('rssFeedback');
+  console.log('Feedback element:', feedback);
+  
   if (feedback) {
-    const message = headings[messageKey] || messageKey;
+    const message = 'RSS успешно загружен';
     feedback.textContent = message;
-    feedback.classList.add('text-success');
     feedback.classList.remove('text-danger');
+    feedback.classList.add('text-success');
+    feedback.style.display = 'block';
+    feedback.style.visibility = 'visible';
+    feedback.style.opacity = '1';
+    
+    console.log('Message set, textContent:', feedback.textContent);
     
     setTimeout(() => {
-      const fb = getFeedbackElement();
-      if (fb && fb.textContent === message) {
-        fb.textContent = '';
-        fb.classList.remove('text-success');
+      if (feedback && feedback.textContent === message) {
+        feedback.textContent = '';
+        feedback.classList.remove('text-success');
+        feedback.style.display = '';
+        console.log('Message cleared after 5 seconds');
       }
     }, 5000);
   }
 };
 
-export const setError = (errorKey) => {
+export const setError = (message) => {
   const input = getInputElement();
-  const feedback = getFeedbackElement();
+  const feedback = document.getElementById('rssFeedback');
   
-  const message = headings[errorKey] || errorKey;
+  console.log('=== setError called, message:', message);
   
   if (input) {
     input.classList.add('is-invalid');
   }
   if (feedback) {
     feedback.textContent = message;
-    feedback.classList.add('text-danger');
     feedback.classList.remove('text-success');
+    feedback.classList.add('text-danger');
+    feedback.style.display = 'block';
+    console.log('Error message set to:', feedback.textContent);
+    
+    setTimeout(() => {
+      if (feedback && feedback.textContent === message) {
+        feedback.textContent = '';
+        feedback.classList.remove('text-danger');
+        feedback.style.display = '';
+        console.log('Error message cleared after 5 seconds');
+      }
+    }, 5000);
   }
 };
 
 export const clearError = () => {
   const input = getInputElement();
-  const feedback = getFeedbackElement();
+  const feedback = document.getElementById('rssFeedback');
   
   if (input) {
     input.classList.remove('is-invalid');
   }
-  if (feedback) {
+  if (feedback && feedback.textContent !== 'RSS успешно загружен') {
+    // Очищаем только сообщения об ошибках, не трогаем успешные
     feedback.textContent = '';
-    feedback.classList.remove('text-danger', 'text-success');
+    feedback.classList.remove('text-danger');
   }
 };
 
@@ -132,7 +148,8 @@ export const resetForm = () => {
     input.value = '';
     input.focus();
   }
-  clearError();
+  // Не очищаем feedback, чтобы сообщение успеха оставалось
+  // clearError();
 };
 
 export const renderFeeds = (container, feeds) => {
@@ -195,7 +212,7 @@ export const renderPosts = (container, posts, onPreviewClick) => {
   container.innerHTML = `
     <div class="posts">
       <div class="card">
-        <div class-card-body">
+        <div class="card-body">
           <h3>${headings.postsTitle}</h3>
           ${sortedPosts.map(post => `
             <div class="post-item mb-3 p-3 border rounded" data-post-id="${post.id}">
