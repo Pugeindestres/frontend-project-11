@@ -1,7 +1,7 @@
 import ru from './locales.js';
 import { getPostsWithReadStatus, markAsRead } from './state.js';
 
-// Создание модального окна
+// Создание модального окна (оставляем как есть)
 function createModalElement() {
   const modalHTML = `
     <div class="modal fade" id="postModal" tabindex="-1" aria-labelledby="postModalLabel" aria-hidden="true">
@@ -9,13 +9,11 @@ function createModalElement() {
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="postModalLabel">Заголовок поста</h5>
-            <button type="button" class="btn-close" data-dismiss="modal" aria-label="${ru.closeButton}"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="${ru.closeButton}"></button>
           </div>
-          <div class="modal-body">
-            Содержимое поста...
-          </div>
+          <div class="modal-body"></div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary close-modal-btn">${ru.closeButton}</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${ru.closeButton}</button>
             <a href="#" class="btn btn-primary full-article-link" target="_blank">${ru.readFullButton}</a>
           </div>
         </div>
@@ -25,37 +23,11 @@ function createModalElement() {
   
   document.body.insertAdjacentHTML('beforeend', modalHTML);
   const modal = document.getElementById('postModal');
-  
-  const closeBtn = modal.querySelector('.close-modal-btn');
-  const closeX = modal.querySelector('.btn-close');
-  
-  const closeModal = () => {
-    modal.classList.remove('show');
-    modal.style.display = 'none';
-    document.body.classList.remove('modal-open');
-  };
-  
-  closeBtn.addEventListener('click', closeModal);
-  closeX.addEventListener('click', closeModal);
-  
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) {
-      closeModal();
-    }
-  });
-  
   return modal;
-}
-
-function openModal(modal) {
-  modal.classList.add('show');
-  modal.style.display = 'block';
-  document.body.classList.add('modal-open');
 }
 
 function openPostModal(post) {
   let modal = document.getElementById('postModal');
-  
   if (!modal) {
     modal = createModalElement();
   }
@@ -63,12 +35,26 @@ function openPostModal(post) {
   const modalTitle = modal.querySelector('.modal-title');
   const modalBody = modal.querySelector('.modal-body');
   const fullLink = modal.querySelector('.full-article-link');
+  const closeBtn = modal.querySelector('.btn-close');
+  const secondaryBtn = modal.querySelector('.btn-secondary');
   
   modalTitle.textContent = post.title;
   modalBody.innerHTML = `<p>${escapeHtml(post.description || ru.modalGoal)}</p>`;
   fullLink.href = post.link;
   
-  openModal(modal);
+  const closeModal = () => {
+    modal.classList.remove('show');
+    modal.style.display = 'none';
+    document.body.classList.remove('modal-open');
+  };
+  
+  closeBtn.onclick = closeModal;
+  secondaryBtn.onclick = closeModal;
+  modal.onclick = (e) => { if (e.target === modal) closeModal(); };
+  
+  modal.classList.add('show');
+  modal.style.display = 'block';
+  document.body.classList.add('modal-open');
 }
 
 export function renderRSSForm(container) {
@@ -77,19 +63,27 @@ export function renderRSSForm(container) {
   container.innerHTML = `
     <div class="card">
       <div class="card-body">
-        <div class="mb-3">
-          <label for="rssUrl" class="form-label">${ru.rssLabel}</label>
-          <div class="input-group">
-            <input 
-              type="url" 
-              class="form-control" 
-              id="rssUrl" 
-              aria-label="url"
-              placeholder="https://example.com/rss">
-            <button class="btn btn-primary" id="addRssBtn" type="button">${ru.addButton}</button>
+        <form id="rssForm">
+          <div class="mb-3">
+            <label for="rssUrl" class="form-label">${ru.rssLabel}</label>
+            <div class="input-group">
+              <input 
+                type="url" 
+                class="form-control" 
+                id="rssUrl" 
+                name="url"
+                aria-label="url"
+                autocomplete="off"
+                placeholder="https://example.com/rss">
+              <button 
+                type="submit" 
+                class="btn btn-primary">
+                ${ru.addButton}
+              </button>
+            </div>
+            <div id="rssFeedback" class="form-text"></div>
           </div>
-          <div id="rssFeedback" class="form-text"></div>
-        </div>
+        </form>
       </div>
     </div>
   `;
@@ -133,10 +127,7 @@ export function renderPosts() {
   if (!container) return;
   
   const postsWithStatus = getPostsWithReadStatus();
-  
-  const sorted = [...postsWithStatus].sort((a, b) => 
-    new Date(b.pubDate) - new Date(a.pubDate)
-  );
+  const sorted = [...postsWithStatus].sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
   
   if (sorted.length === 0) {
     container.innerHTML = `
@@ -182,7 +173,6 @@ export function renderPosts() {
       e.preventDefault();
       const postId = btn.dataset.postId;
       const post = postsWithStatus.find(p => p.id === postId);
-      
       if (post) {
         openPostModal(post);
         if (!post.isRead) {
@@ -203,7 +193,6 @@ export function showFeedback(message, isError = false) {
   if (feedbackDiv) {
     feedbackDiv.textContent = message;
     feedbackDiv.className = `form-text ${isError ? 'text-danger' : 'text-success'}`;
-    
     setTimeout(() => {
       if (feedbackDiv.textContent === message) {
         feedbackDiv.textContent = '';
@@ -214,22 +203,11 @@ export function showFeedback(message, isError = false) {
 
 function escapeHtml(str) {
   if (!str) return '';
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 function formatDate(date) {
   if (!date) return '';
   const d = new Date(date);
-  return d.toLocaleString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  return d.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
