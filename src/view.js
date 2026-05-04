@@ -136,7 +136,6 @@ export const clearError = () => {
     input.classList.remove('is-invalid');
   }
   if (feedback && feedback.textContent !== 'RSS успешно загружен') {
-    // Очищаем только сообщения об ошибках, не трогаем успешные
     feedback.textContent = '';
     feedback.classList.remove('text-danger');
   }
@@ -148,14 +147,18 @@ export const resetForm = () => {
     input.value = '';
     input.focus();
   }
-  // Не очищаем feedback, чтобы сообщение успеха оставалось
-  // clearError();
 };
 
 export const renderFeeds = (container, feeds) => {
+  console.log('=== renderFeeds called ===');
+  console.log('Container:', container);
+  console.log('Feeds count:', feeds?.length);
+  console.log('Feeds:', feeds);
+  
   if (!container) return;
   
   if (!feeds || feeds.length === 0) {
+    console.log('No feeds to display');
     container.innerHTML = `
       <div class="feeds">
         <div class="card">
@@ -168,6 +171,8 @@ export const renderFeeds = (container, feeds) => {
     `;
     return;
   }
+  
+  console.log('Rendering', feeds.length, 'feeds');
   
   container.innerHTML = `
     <div class="feeds">
@@ -186,12 +191,20 @@ export const renderFeeds = (container, feeds) => {
       </div>
     </div>
   `;
+  
+  console.log('Feeds rendered successfully');
 };
 
 export const renderPosts = (container, posts, onPreviewClick) => {
+  console.log('=== renderPosts called ===');
+  console.log('Container:', container);
+  console.log('Posts count:', posts?.length);
+  console.log('First post:', posts?.[0]);
+  
   if (!container) return;
   
   if (!posts || posts.length === 0) {
+    console.log('No posts to display');
     container.innerHTML = `
       <div class="posts">
         <div class="card">
@@ -204,6 +217,8 @@ export const renderPosts = (container, posts, onPreviewClick) => {
     `;
     return;
   }
+  
+  console.log('Rendering', posts.length, 'posts');
   
   const sortedPosts = [...posts].sort((a, b) => 
     new Date(b.pubDate) - new Date(a.pubDate)
@@ -237,6 +252,8 @@ export const renderPosts = (container, posts, onPreviewClick) => {
       </div>
     </div>
   `;
+  
+  console.log('Posts rendered successfully');
   
   if (onPreviewClick) {
     document.querySelectorAll('.preview-btn').forEach(btn => {
