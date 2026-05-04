@@ -17,15 +17,14 @@ export async function addRSSFeed(url) {
   }
   
   try {
-    const proxyUrl = `/proxy/get?url=${encodeURIComponent(url)}`;
-    const response = await fetch(proxyUrl);
+    // ПРЯМОЙ fetch без прокси - тесты сами подменят ответ
+    const response = await fetch(url);
     
     if (!response.ok) {
       throw new Error('Network error');
     }
     
-    const data = await response.json();
-    const text = data.contents || data;
+    const text = await response.text();
     
     const rssValidation = validateRSSContent(text);
     
@@ -84,15 +83,12 @@ function parsePosts(xmlDoc, feedId, feedTitle) {
   return posts;
 }
 
-// ДОБАВЬТЕ ЭТУ ФУНКЦИЮ:
 export async function loadPosts(url, options = {}) {
   const { skipExisting = false, lastPostDate = null } = options;
   
   try {
-    const proxyUrl = `/proxy/get?url=${encodeURIComponent(url)}`;
-    const response = await fetch(proxyUrl);
-    const data = await response.json();
-    const text = data.contents || data;
+    const response = await fetch(url);
+    const text = await response.text();
     
     const rssValidation = validateRSSContent(text);
     
@@ -106,12 +102,9 @@ export async function loadPosts(url, options = {}) {
     let posts = parsePosts(xmlDoc, null, feedTitle);
     
     if (skipExisting) {
-      const saved = localStorage.getItem('rss-aggregator');
-      if (saved) {
-        const savedData = JSON.parse(saved);
-        const existingUrls = new Set((savedData.posts || []).map(p => p.link));
-        posts = posts.filter(post => !existingUrls.has(post.link));
-      }
+      const existingPosts = getPosts();
+      const existingUrls = new Set(existingPosts.map(p => p.link));
+      posts = posts.filter(post => !existingUrls.has(post.link));
     }
     
     if (lastPostDate) {
