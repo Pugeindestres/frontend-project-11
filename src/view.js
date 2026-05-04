@@ -4,6 +4,38 @@ let currentForm = null;
 let currentInput = null;
 let currentSubmitBtn = null;
 
+// Fallback сообщения на случай, если i18next не готов
+const fallbackMessages = {
+  rssLabel: 'Ссылка RSS',
+  addButton: 'Добавить',
+  previewButton: 'Просмотр',
+  closeButton: 'Закрыть',
+  readFullButton: 'Читать полностью',
+  feedsTitle: 'Фиды',
+  postsTitle: 'Посты',
+  successLoad: 'RSS успешно загружен',
+  alreadyExists: 'RSS уже существует',
+  notEmpty: 'Не должно быть пустым',
+  invalidUrl: 'Ссылка должна быть валидным URL',
+  noValidRSS: 'Ресурс не содержит валидный RSS',
+  networkError: 'Ошибка сети',
+  modalGoal: 'Цель: Научиться извлекать из дерева необходимые данные'
+};
+
+// Безопасная функция получения перевода
+const t = (key) => {
+  try {
+    const result = i18next.t(key);
+    // Если i18next вернул ключ вместо значения (не инициализирован)
+    if (result === key) {
+      return fallbackMessages[key] || key;
+    }
+    return result;
+  } catch (e) {
+    return fallbackMessages[key] || key;
+  }
+};
+
 // Функция для получения элемента фидбека (всегда актуальный)
 const getFeedbackElement = () => {
   return document.querySelector('.feedback');
@@ -25,7 +57,7 @@ export const initForm = (container) => {
   container.innerHTML = `
     <form id="rssForm">
       <div class="mb-3">
-        <label for="rssUrl" class="form-label">${i18next.t('rssLabel')}</label>
+        <label for="rssUrl" class="form-label">${t('rssLabel')}</label>
         <div class="input-group">
           <input 
             type="url" 
@@ -39,7 +71,7 @@ export const initForm = (container) => {
             type="submit" 
             class="btn btn-primary"
             id="submitBtn">
-            ${i18next.t('addButton')}
+            ${t('addButton')}
           </button>
         </div>
         <div class="feedback"></div>
@@ -64,13 +96,14 @@ export const setLoading = (isLoading) => {
 export const setSuccess = (messageKey) => {
   const feedback = getFeedbackElement();
   if (feedback) {
-    feedback.textContent = i18next.t(messageKey);
+    const message = t(messageKey);
+    feedback.textContent = message;
     feedback.classList.add('text-success');
     feedback.classList.remove('text-danger');
     
     setTimeout(() => {
       const fb = getFeedbackElement();
-      if (fb && fb.textContent === i18next.t(messageKey)) {
+      if (fb && fb.textContent === message) {
         fb.textContent = '';
         fb.classList.remove('text-success');
       }
@@ -82,11 +115,13 @@ export const setError = (errorKey) => {
   const input = getInputElement();
   const feedback = getFeedbackElement();
   
+  const message = t(errorKey);
+  
   if (input) {
     input.classList.add('is-invalid');
   }
   if (feedback) {
-    feedback.textContent = i18next.t(errorKey);
+    feedback.textContent = message;
     feedback.classList.add('text-danger');
     feedback.classList.remove('text-success');
   }
@@ -122,7 +157,7 @@ export const renderFeeds = (container, feeds) => {
       <div class="feeds">
         <div class="card">
           <div class="card-body">
-            <h3>${i18next.t('feedsTitle')}</h3>
+            <h3>${t('feedsTitle')}</h3>
             <p class="text-muted">Нет добавленных RSS</p>
           </div>
         </div>
@@ -135,7 +170,7 @@ export const renderFeeds = (container, feeds) => {
     <div class="feeds">
       <div class="card">
         <div class="card-body">
-          <h3>${i18next.t('feedsTitle')}</h3>
+          <h3>${t('feedsTitle')}</h3>
           <ul class="list-group">
             ${feeds.map(feed => `
               <li class="list-group-item">
@@ -158,7 +193,7 @@ export const renderPosts = (container, posts, onPreviewClick) => {
       <div class="posts">
         <div class="card">
           <div class="card-body">
-            <h3>${i18next.t('postsTitle')}</h3>
+            <h3>${t('postsTitle')}</h3>
             <p class="text-muted">Нет постов</p>
           </div>
         </div>
@@ -175,7 +210,7 @@ export const renderPosts = (container, posts, onPreviewClick) => {
     <div class="posts">
       <div class="card">
         <div class="card-body">
-          <h3>${i18next.t('postsTitle')}</h3>
+          <h3>${t('postsTitle')}</h3>
           ${sortedPosts.map(post => `
             <div class="post-item mb-3 p-3 border rounded" data-post-id="${post.id}">
               <div class="d-flex justify-content-between align-items-start">
@@ -185,7 +220,7 @@ export const renderPosts = (container, posts, onPreviewClick) => {
                   </a>
                 </h4>
                 <button class="btn btn-sm btn-outline-secondary preview-btn" data-post-id="${post.id}">
-                  ${i18next.t('previewButton')}
+                  ${t('previewButton')}
                 </button>
               </div>
               <div class="post-meta text-muted small mt-2">
