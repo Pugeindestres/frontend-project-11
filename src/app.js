@@ -19,7 +19,6 @@ let formElements = null;
 let modal = null;
 
 const openModal = (post) => {
-  // ВАЖНО: ищем модальное окно с id="modal"
   const modalElement = document.getElementById('modal');
   if (!modalElement) return;
   

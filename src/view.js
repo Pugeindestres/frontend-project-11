@@ -1,8 +1,8 @@
 import i18next from 'i18next';
 
-let currentForm = null;
 let currentInput = null;
 let currentFeedback = null;
+let currentSubmitBtn = null;
 
 export const initForm = (container) => {
   if (!container) return null;
@@ -32,17 +32,17 @@ export const initForm = (container) => {
     </form>
   `;
   
-  currentForm = container.querySelector('#rssForm');
+  const form = container.querySelector('#rssForm');
   currentInput = container.querySelector('#rssUrl');
   currentFeedback = container.querySelector('.feedback');
+  currentSubmitBtn = container.querySelector('#submitBtn');
   
-  return { form: currentForm, input: currentInput, feedback: currentFeedback };
+  return { form, input: currentInput, feedback: currentFeedback };
 };
 
 export const setLoading = (isLoading) => {
-  const submitBtn = currentForm?.querySelector('#submitBtn');
-  if (submitBtn) {
-    submitBtn.disabled = isLoading;
+  if (currentSubmitBtn) {
+    currentSubmitBtn.disabled = isLoading;
   }
 };
 
@@ -53,7 +53,7 @@ export const setSuccess = (messageKey) => {
     currentFeedback.classList.remove('text-danger');
     
     setTimeout(() => {
-      if (currentFeedback.textContent === i18next.t(messageKey)) {
+      if (currentFeedback && currentFeedback.textContent === i18next.t(messageKey)) {
         currentFeedback.textContent = '';
         currentFeedback.classList.remove('text-success');
       }
