@@ -1,97 +1,46 @@
-import ru from './locales.js';
-import { getPostsWithReadStatus, markAsRead } from './state.js';
+// src/view.js
+import i18next from 'i18next';
 
-function createModalElement() {
-  const modalHTML = `
-    <div class="modal fade" id="postModal" tabindex="-1" aria-labelledby="postModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="postModalLabel">Заголовок поста</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="${ru.closeButton}"></button>
-          </div>
-          <div class="modal-body"></div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${ru.closeButton}</button>
-            <a href="#" class="btn btn-primary full-article-link" target="_blank">${ru.readFullButton}</a>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-  
-  document.body.insertAdjacentHTML('beforeend', modalHTML);
-  return document.getElementById('postModal');
-}
-
-function openPostModal(post) {
-  let modal = document.getElementById('postModal');
-  if (!modal) {
-    modal = createModalElement();
-  }
-  
-  const modalTitle = modal.querySelector('.modal-title');
-  const modalBody = modal.querySelector('.modal-body');
-  const fullLink = modal.querySelector('.full-article-link');
-  const closeBtn = modal.querySelector('.btn-close');
-  const secondaryBtn = modal.querySelector('.btn-secondary');
-  
-  modalTitle.textContent = post.title;
-  modalBody.innerHTML = `<p>${escapeHtml(post.description || ru.modalGoal)}</p>`;
-  fullLink.href = post.link;
-  
-  const closeModal = () => {
-    const bsModal = bootstrap.Modal.getInstance(modal);
-    if (bsModal) {
-      bsModal.hide();
-    } else {
-      modal.classList.remove('show');
-      modal.style.display = 'none';
-      document.body.classList.remove('modal-open');
-    }
-  };
-  
-  closeBtn.onclick = closeModal;
-  secondaryBtn.onclick = closeModal;
-  
-  const bsModal = new bootstrap.Modal(modal);
-  bsModal.show();
-}
-
-export function renderRSSForm(container) {
+export const renderForm = (container, isLoading = false, errorKey = null) => {
   if (!container) return;
   
+  const errorClass = errorKey ? 'is-invalid' : '';
+  const errorMessage = errorKey ? i18next.t(errorKey) : '';
+  
   container.innerHTML = `
-    <div class="card">
-      <div class="card-body">
-        <form id="rssForm">
-          <div class="mb-3">
-            <label for="rssUrl" class="form-label">${ru.rssLabel}</label>
-            <div class="input-group">
-              <input 
-                type="url" 
-                class="form-control" 
-                id="rssUrl" 
-                name="url"
-                aria-label="url"
-                autocomplete="off"
-                placeholder="https://example.com/rss">
-              <button 
-                type="submit" 
-                class="btn btn-primary">
-                ${ru.addButton}
-              </button>
-            </div>
-            <div class="feedback form-text"></div>
-          </div>
-        </form>
+    <form id="rssForm">
+      <div class="mb-3">
+        <label for="rssUrl" class="form-label">${i18next.t('rssLabel')}</label>
+        <div class="input-group">
+          <input 
+            type="url" 
+            class="form-control ${errorClass}" 
+            id="rssUrl" 
+            name="url"
+            aria-label="url"
+            autocomplete="off"
+            placeholder="https://example.com/rss">
+          <button 
+            type="submit" 
+            class="btn btn-primary"
+            ${isLoading ? 'disabled' : ''}>
+            ${i18next.t('addButton')}
+          </button>
+        </div>
+        <div id="rssFeedback" class="feedback ${errorKey ? 'text-danger' : ''}">
+          ${errorMessage}
+        </div>
       </div>
-    </div>
+    </form>
   `;
-}
+  
+  const form = container.querySelector('#rssForm');
+  const input = container.querySelector('#rssUrl');
+  
+  return { form, input };
+};
 
-export function renderFeeds(feeds) {
-  const container = document.getElementById('feedsContainer');
+export const renderFeeds = (container, feeds) => {
   if (!container) return;
   
   if (!feeds || feeds.length === 0) {
@@ -99,7 +48,7 @@ export function renderFeeds(feeds) {
       <div class="feeds">
         <div class="card">
           <div class="card-body">
-            <h3>${ru.feedsTitle}</h3>
+            <h3>${i18next.t('feedsTitle')}</h3>
             <p class="text-muted">Нет добавленных RSS</p>
           </div>
         </div>
@@ -112,12 +61,13 @@ export function renderFeeds(feeds) {
     <div class="feeds">
       <div class="card">
         <div class="card-body">
-          <h3>${ru.feedsTitle}</h3>
+          <h3>${i18next.t('feedsTitle')}</h3>
           <ul class="list-group">
             ${feeds.map(feed => `
               <li class="list-group-item">
-                <strong>${escapeHtml(feed.title)}</strong><br>
-                <small class="text-muted">${escapeHtml(feed.url)}</small>
+                <strong>${escapeHtml(feed.title)}</strong>
+                ${feed.description ? `<br><small class="text-muted">${escapeHtml(feed.description)}</small>` : ''}
+                <br><small class="text-muted">${escapeHtml(feed.url)}</small>
               </li>
             `).join('')}
           </ul>
@@ -125,21 +75,17 @@ export function renderFeeds(feeds) {
       </div>
     </div>
   `;
-}
+};
 
-export function renderPosts() {
-  const container = document.getElementById('postsContainer');
+export const renderPosts = (container, posts, onPreviewClick) => {
   if (!container) return;
   
-  const postsWithStatus = getPostsWithReadStatus();
-  const sorted = [...postsWithStatus].sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
-  
-  if (sorted.length === 0) {
+  if (!posts || posts.length === 0) {
     container.innerHTML = `
       <div class="posts">
         <div class="card">
           <div class="card-body">
-            <h3>${ru.postsTitle}</h3>
+            <h3>${i18next.t('postsTitle')}</h3>
             <p class="text-muted">Нет постов</p>
           </div>
         </div>
@@ -148,12 +94,17 @@ export function renderPosts() {
     return;
   }
   
+  // Сортируем посты по дате (новые сверху)
+  const sortedPosts = [...posts].sort((a, b) => 
+    new Date(b.pubDate) - new Date(a.pubDate)
+  );
+  
   container.innerHTML = `
     <div class="posts">
       <div class="card">
         <div class="card-body">
-          <h3>${ru.postsTitle}</h3>
-          ${sorted.map(post => `
+          <h3>${i18next.t('postsTitle')}</h3>
+          ${sortedPosts.map(post => `
             <div class="post-item mb-3 p-3 border rounded" data-post-id="${post.id}">
               <div class="d-flex justify-content-between align-items-start">
                 <h4 class="post-title">
@@ -162,7 +113,7 @@ export function renderPosts() {
                   </a>
                 </h4>
                 <button class="btn btn-sm btn-outline-secondary preview-btn" data-post-id="${post.id}">
-                  ${ru.previewButton}
+                  ${i18next.t('previewButton')}
                 </button>
               </div>
               <div class="post-meta text-muted small mt-2">
@@ -177,38 +128,58 @@ export function renderPosts() {
     </div>
   `;
   
-  document.querySelectorAll('.preview-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      const postId = btn.dataset.postId;
-      const post = postsWithStatus.find(p => p.id === postId);
-      if (post) {
-        openPostModal(post);
-        if (!post.isRead) {
-          markAsRead(postId);
-          const titleLink = btn.closest('.post-item').querySelector('.post-title a');
-          if (titleLink) {
-            titleLink.classList.remove('fw-bold');
-            titleLink.classList.add('fw-normal');
-          }
+  // Добавляем обработчики для кнопок предпросмотра
+  if (onPreviewClick) {
+    document.querySelectorAll('.preview-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const postId = btn.dataset.postId;
+        const post = posts.find(p => p.id === postId);
+        if (post && onPreviewClick) {
+          onPreviewClick(post);
         }
-      }
+      });
     });
-  });
-}
-
-export function showFeedback(message, isError = false) {
-  const feedbackDiv = document.querySelector('.feedback');
-  if (feedbackDiv) {
-    feedbackDiv.textContent = message;
-    feedbackDiv.className = `feedback form-text ${isError ? 'text-danger' : 'text-success'}`;
-    
-    setTimeout(() => {
-      if (feedbackDiv.textContent === message) {
-        feedbackDiv.textContent = '';
-      }
-    }, 5000);
   }
+};
+
+export const clearError = (container) => {
+  const feedback = container?.querySelector('#rssFeedback');
+  const input = container?.querySelector('#rssUrl');
+  
+  if (feedback) {
+    feedback.textContent = '';
+    feedback.classList.remove('text-danger');
+  }
+  if (input) {
+    input.classList.remove('is-invalid');
+  }
+};
+
+export const setError = (container, errorKey) => {
+  const feedback = container?.querySelector('#rssFeedback');
+  const input = container?.querySelector('#rssUrl');
+  
+  if (feedback) {
+    feedback.textContent = i18next.t(errorKey);
+    feedback.classList.add('text-danger');
+  }
+  if (input) {
+    input.classList.add('is-invalid');
+  }
+};
+
+// Форматирование даты
+function formatDate(dateString) {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleString('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
 function escapeHtml(str) {
@@ -221,14 +192,3 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
-function formatDate(date) {
-  if (!date) return '';
-  const d = new Date(date);
-  return d.toLocaleString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-}

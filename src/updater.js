@@ -1,57 +1,119 @@
-import { getFeeds, addPosts, getPosts } from './state.js';
-import { loadPosts } from './api.js';
+// src/updater.js
+import { loadRSS } from './api.js';
+import state, { addPosts, getPostsWithReadStatus } from './state.js';
+import { renderPosts } from './view.js';
 
-let isUpdating = false;
 let updateTimeout = null;
+let isUpdating = false;
 
-function getLastPostDate(feedId) {
-  const posts = getPosts();
-  const feedPosts = posts.filter(post => post.feedId === feedId);
-  
+// Функция для получения даты последнего поста в фиде
+const getLastPostDate = (feedId) => {
+  const feedPosts = state.posts.filter(post => post.feedId === feedId);
   if (feedPosts.length === 0) return null;
   
-  const latest = Math.max(...feedPosts.map(p => new Date(p.pubDate).getTime()));
-  return new Date(latest);
-}
+  const latestPost = feedPosts.reduce((latest, post) => {
+    return new Date(post.pubDate) > new Date(latest.pubDate) ? post : latest;
+  }, feedPosts[0]);
+  
+  return new Date(latestPost.pubDate);
+};
 
-export function startUpdater(intervalMs = 5000) {
+// Функция для проверки одного фида на наличие новых постов
+const checkFeedForUpdates = (feed) => {
+  const lastPostDate = getLastPostDate(feed.id);
+  
+  return loadRSS(feed.url)
+    .then(({ posts }) => {
+      // Фильтруем только новые посты (которых ещё нет в состоянии)
+      const existingPostLinks = new Set(state.posts.map(p => p.link));
+      
+      let newPosts = posts.filter(post => !existingPostLinks.has(post.link));
+      
+      // Если есть дата последнего поста, фильтруем по дате
+      if (lastPostDate) {
+        newPosts = newPosts.filter(post => new Date(post.pubDate) > lastPostDate);
+      }
+      
+      if (newPosts.length > 0) {
+        // Добавляем новые посты в состояние
+        addPosts(feed.id, newPosts);
+        console.log(`Добавлено ${newPosts.length} новых постов из "${feed.title}"`);
+        
+        // Обновляем UI
+        const postsContainer = document.getElementById('postsContainer');
+        if (postsContainer) {
+          const postsWithStatus = getPostsWithReadStatus();
+          renderPosts(postsContainer, postsWithStatus, null);
+        }
+      }
+      
+      return newPosts.length;
+    })
+    .catch((error) => {
+      console.error(`Ошибка при обновлении фида "${feed.url}":`, error);
+      return 0;
+    });
+};
+
+// Функция для проверки всех фидов
+const updateAllFeeds = () => {
+  const feedsToCheck = [...state.feeds];
+  
+  if (feedsToCheck.length === 0) {
+    return Promise.resolve();
+  }
+  
+  const promises = feedsToCheck.map(feed => checkFeedForUpdates(feed));
+  return Promise.all(promises)
+    .then(results => {
+      const totalNewPosts = results.reduce((sum, count) => sum + count, 0);
+      if (totalNewPosts > 0) {
+        console.log(`Всего добавлено ${totalNewPosts} новых постов`);
+      }
+    })
+    .catch(error => {
+      console.error('Ошибка при обновлении фидов:', error);
+    });
+};
+
+// Рекурсивная функция для периодической проверки
+const scheduleUpdate = (intervalMs = 5000) => {
   if (updateTimeout) {
     clearTimeout(updateTimeout);
   }
   
-  async function tick() {
-    if (isUpdating) return;
+  const tick = () => {
+    if (isUpdating) {
+      updateTimeout = setTimeout(tick, intervalMs);
+      return;
+    }
     
     isUpdating = true;
     
-    try {
-      const feeds = getFeeds();
-      
-      for (const feed of feeds) {
-        const newPosts = await loadPosts(feed.url, {
-          skipExisting: true,
-          lastPostDate: getLastPostDate(feed.id),
-        });
-        
-        if (newPosts && newPosts.length > 0) {
-          addPosts(feed.id, newPosts);
-        }
-      }
-    } catch (error) {
-      console.error('Ошибка при обновлении:', error);
-    } finally {
-      isUpdating = false;
-      updateTimeout = setTimeout(tick, intervalMs);
-    }
-  }
+    updateAllFeeds()
+      .finally(() => {
+        isUpdating = false;
+        updateTimeout = setTimeout(tick, intervalMs);
+      });
+  };
   
-  tick();
-}
+  updateTimeout = setTimeout(tick, intervalMs);
+};
 
-export function stopUpdater() {
+// Запуск обновлений
+export const startUpdater = (intervalMs = 5000) => {
+  if (updateTimeout) {
+    clearTimeout(updateTimeout);
+    isUpdating = false;
+  }
+  scheduleUpdate(intervalMs);
+};
+
+// Остановка обновлений
+export const stopUpdater = () => {
   if (updateTimeout) {
     clearTimeout(updateTimeout);
     updateTimeout = null;
+    isUpdating = false;
   }
-  isUpdating = false;
-}
+};
