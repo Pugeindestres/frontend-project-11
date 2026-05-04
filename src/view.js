@@ -4,15 +4,15 @@ let currentForm = null;
 let currentInput = null;
 let currentSubmitBtn = null;
 
-// Fallback сообщения на случай, если i18next не готов
-const fallbackMessages = {
+// Прямые заголовки (без i18next)
+const headings = {
+  feedsTitle: 'Фиды',
+  postsTitle: 'Посты',
   rssLabel: 'Ссылка RSS',
   addButton: 'Добавить',
   previewButton: 'Просмотр',
   closeButton: 'Закрыть',
   readFullButton: 'Читать полностью',
-  feedsTitle: 'Фиды',
-  postsTitle: 'Посты',
   successLoad: 'RSS успешно загружен',
   alreadyExists: 'RSS уже существует',
   notEmpty: 'Не должно быть пустым',
@@ -22,28 +22,7 @@ const fallbackMessages = {
   modalGoal: 'Цель: Научиться извлекать из дерева необходимые данные'
 };
 
-// Безопасная функция получения перевода
-const t = (key) => {
-  const messages = {
-    rssLabel: 'Ссылка RSS',
-    addButton: 'Добавить',
-    previewButton: 'Просмотр',
-    closeButton: 'Закрыть',
-    readFullButton: 'Читать полностью',
-    feedsTitle: 'Фиды',
-    postsTitle: 'Посты',
-    successLoad: 'RSS успешно загружен',
-    alreadyExists: 'RSS уже существует',
-    notEmpty: 'Не должно быть пустым',
-    invalidUrl: 'Ссылка должна быть валидным URL',
-    noValidRSS: 'Ресурс не содержит валидный RSS',
-    networkError: 'Ошибка сети',
-    modalGoal: 'Цель: Научиться извлекать из дерева необходимые данные'
-  };
-  return messages[key] || key;
-};
-
-// Функция для получения элемента фидбека (всегда актуальный)
+// Функция для получения элемента фидбека
 const getFeedbackElement = () => {
   return document.querySelector('.feedback');
 };
@@ -64,7 +43,7 @@ export const initForm = (container) => {
   container.innerHTML = `
     <form id="rssForm">
       <div class="mb-3">
-        <label for="rssUrl" class="form-label">${t('rssLabel')}</label>
+        <label for="rssUrl" class="form-label">${headings.rssLabel}</label>
         <div class="input-group">
           <input 
             type="url" 
@@ -78,7 +57,7 @@ export const initForm = (container) => {
             type="submit" 
             class="btn btn-primary"
             id="submitBtn">
-            ${t('addButton')}
+            ${headings.addButton}
           </button>
         </div>
         <div class="feedback"></div>
@@ -103,7 +82,7 @@ export const setLoading = (isLoading) => {
 export const setSuccess = (messageKey) => {
   const feedback = getFeedbackElement();
   if (feedback) {
-    const message = t(messageKey);
+    const message = headings[messageKey] || messageKey;
     feedback.textContent = message;
     feedback.classList.add('text-success');
     feedback.classList.remove('text-danger');
@@ -122,7 +101,7 @@ export const setError = (errorKey) => {
   const input = getInputElement();
   const feedback = getFeedbackElement();
   
-  const message = t(errorKey);
+  const message = headings[errorKey] || errorKey;
   
   if (input) {
     input.classList.add('is-invalid');
@@ -164,7 +143,7 @@ export const renderFeeds = (container, feeds) => {
       <div class="feeds">
         <div class="card">
           <div class="card-body">
-            <h3>${t('feedsTitle')}</h3>
+            <h3>${headings.feedsTitle}</h3>
             <p class="text-muted">Нет добавленных RSS</p>
           </div>
         </div>
@@ -177,11 +156,11 @@ export const renderFeeds = (container, feeds) => {
     <div class="feeds">
       <div class="card">
         <div class="card-body">
-          <h3>${t('feedsTitle')}</h3>
+          <h3>${headings.feedsTitle}</h3>
           <ul class="list-group">
             ${feeds.map(feed => `
               <li class="list-group-item">
-                <strong>${escapeHtml(feed.title)}</strong>
+                <strong>${escapeHtml(feed.title || 'Без названия')}</strong>
                 ${feed.description ? `<br><small class="text-muted">${escapeHtml(feed.description)}</small>` : ''}
               </li>
             `).join('')}
@@ -200,7 +179,7 @@ export const renderPosts = (container, posts, onPreviewClick) => {
       <div class="posts">
         <div class="card">
           <div class="card-body">
-            <h3>${t('postsTitle')}</h3>
+            <h3>${headings.postsTitle}</h3>
             <p class="text-muted">Нет постов</p>
           </div>
         </div>
@@ -216,24 +195,25 @@ export const renderPosts = (container, posts, onPreviewClick) => {
   container.innerHTML = `
     <div class="posts">
       <div class="card">
-        <div class="card-body">
-          <h3>${t('postsTitle')}</h3>
+        <div class-card-body">
+          <h3>${headings.postsTitle}</h3>
           ${sortedPosts.map(post => `
             <div class="post-item mb-3 p-3 border rounded" data-post-id="${post.id}">
               <div class="d-flex justify-content-between align-items-start">
                 <h4 class="post-title">
-                  <a href="${post.link}" target="_blank" class="${post.isRead ? 'link-secondary' : 'fw-bold'}">
-                    ${escapeHtml(post.title)}
+                  <a href="${post.link || '#'}" target="_blank" class="${post.isRead ? 'link-secondary' : 'fw-bold'}">
+                    ${escapeHtml(post.title || 'Без названия')}
                   </a>
                 </h4>
                 <button class="btn btn-sm btn-outline-secondary preview-btn" data-post-id="${post.id}">
-                  ${t('previewButton')}
+                  ${headings.previewButton}
                 </button>
               </div>
               <div class="post-meta text-muted small mt-2">
                 <span class="feed-title">${escapeHtml(post.feedTitle || '')}</span>
+                <span class="post-date ms-2">${formatDate(post.pubDate)}</span>
               </div>
-              <p class="mt-2">${escapeHtml(post.description?.substring(0, 200) || '')}...</p>
+              <p class="mt-2">${escapeHtml(post.description?.substring(0, 200) || 'Нет описания')}...</p>
             </div>
           `).join('')}
         </div>
@@ -254,6 +234,19 @@ export const renderPosts = (container, posts, onPreviewClick) => {
     });
   }
 };
+
+function formatDate(dateString) {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '';
+  return date.toLocaleString('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
 
 function escapeHtml(str) {
   if (!str) return '';
