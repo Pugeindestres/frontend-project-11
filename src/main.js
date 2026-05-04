@@ -2,15 +2,17 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import './styles.css';
 
-import { initState, subscribe } from './state.js';  // убрали getPostsWithReadStatus
+import { initState, subscribe, getFeeds } from './state.js';
 import { renderRSSForm, renderFeeds, renderPosts, showFeedback } from './view.js';
 import { startUpdater } from './updater.js';
 import { addRSSFeed } from './api.js';
 import ru from './locales.js';
 
 async function init() {
+  // Инициализируем состояние
   initState();
   
+  // Рендерим форму
   const rssFormContainer = document.getElementById('rssFormContainer');
   if (rssFormContainer) {
     renderRSSForm(rssFormContainer);
@@ -23,12 +25,18 @@ async function init() {
         e.preventDefault();
         const url = urlInput.value.trim();
         
+        console.log('Form submitted with URL:', url); // Для отладки
+        
         if (url) {
           const submitBtn = form.querySelector('button[type="submit"]');
           submitBtn.disabled = true;
           
-          await addRSSFeed(url);
-          urlInput.value = '';
+          const result = await addRSSFeed(url);
+          console.log('addRSSFeed result:', result); // Для отладки
+          
+          if (result) {
+            urlInput.value = '';
+          }
           
           submitBtn.disabled = false;
           urlInput.focus();
@@ -39,14 +47,22 @@ async function init() {
     }
   }
   
-  subscribe('feeds', renderFeeds);
+  // Подписываемся на изменения
+  subscribe('feeds', (feeds) => {
+    console.log('Feeds updated:', feeds); // Для отладки
+    renderFeeds(feeds);
+  });
+  
   subscribe('posts', () => {
+    console.log('Posts updated'); // Для отладки
     renderPosts();
   });
   
+  // Запускаем обновление
   startUpdater(5000);
   
-  renderFeeds([]);
+  // Начальный рендеринг
+  renderFeeds(getFeeds());
   renderPosts();
 }
 
