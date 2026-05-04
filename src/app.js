@@ -6,18 +6,21 @@ import state, {
   markAsRead, 
   getPostsWithReadStatus 
 } from './state.js';
-import { renderForm, renderFeeds, renderPosts, setError, clearError, showSuccess } from './view.js';
+import { 
+  initForm, setLoading as setFormLoading, setSuccess, setError, clearError, resetForm,
+  renderFeeds, renderPosts 
+} from './view.js';
 import { loadRSS } from './api.js';
 import { startUpdater, stopUpdater } from './updater.js';
 import validate from './validate.js';
 import i18next from 'i18next';
 
 let formElements = null;
-let rssFormContainer = null;
 let modal = null;
 
 const openModal = (post) => {
-  const modalElement = document.getElementById('postModal');
+  // ВАЖНО: ищем модальное окно с id="modal"
+  const modalElement = document.getElementById('modal');
   if (!modalElement) return;
   
   const modalTitle = modalElement.querySelector('.modal-title');
@@ -55,12 +58,8 @@ const addRSS = (url) => {
   return schema.validate(url)
     .then(() => {
       setLoading(true);
-      clearError(formElements);
-      
-      if (formElements && formElements.form) {
-        const submitBtn = formElements.form.querySelector('button[type="submit"]');
-        if (submitBtn) submitBtn.disabled = true;
-      }
+      setFormLoading(true);
+      clearError();
       
       return loadRSS(url);
     })
@@ -75,13 +74,8 @@ const addRSS = (url) => {
       
       addFeed(newFeed);
       addPosts(newFeed.id, posts);
-      showSuccess(formElements, 'successLoad');
-      
-      if (formElements && formElements.input) {
-        formElements.input.value = '';
-        formElements.input.focus();
-      }
-      
+      setSuccess('successLoad');
+      resetForm();
       setStateError(null);
       updateUI();
       
@@ -105,39 +99,28 @@ const addRSS = (url) => {
       }
       
       setStateError(errorKey);
-      setError(formElements, errorKey);
+      setError(errorKey);
       
       throw err;
     })
     .finally(() => {
       setLoading(false);
-      if (formElements && formElements.form) {
-        const submitBtn = formElements.form.querySelector('button[type="submit"]');
-        if (submitBtn) submitBtn.disabled = false;
-      }
+      setFormLoading(false);
     });
 };
 
-let submitHandler = null;
-
-const attachSubmitHandler = () => {
-  if (formElements && formElements.form) {
-    if (submitHandler) {
-      formElements.form.removeEventListener('submit', submitHandler);
+const attachSubmitHandler = (form) => {
+  if (!form) return;
+  
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const url = formElements.input.value.trim();
+    if (url) {
+      addRSS(url);
+    } else {
+      setError('notEmpty');
     }
-    
-    submitHandler = (e) => {
-      e.preventDefault();
-      const url = formElements.input.value.trim();
-      if (url) {
-        addRSS(url);
-      } else {
-        setError(formElements, 'notEmpty');
-      }
-    };
-    
-    formElements.form.addEventListener('submit', submitHandler);
-  }
+  });
 };
 
 function escapeHtml(str) {
@@ -151,11 +134,14 @@ function escapeHtml(str) {
 }
 
 export default () => {
-  rssFormContainer = document.getElementById('rssFormContainer');
+  const rssFormContainer = document.getElementById('rssFormContainer');
   if (!rssFormContainer) return;
   
-  formElements = renderForm(rssFormContainer, false);
-  attachSubmitHandler();
+  formElements = initForm(rssFormContainer);
+  if (formElements && formElements.form) {
+    attachSubmitHandler(formElements.form);
+  }
+  
   updateUI();
   startUpdater(5000);
   

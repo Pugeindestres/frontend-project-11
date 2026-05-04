@@ -1,4 +1,3 @@
-// src/i18n.js
 import i18next from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import * as yup from 'yup';
@@ -15,19 +14,16 @@ export default async () => {
     }
   });
 
-  // Настройка yup для использования i18next
   yup.setLocale({
     mixed: {
-      required: () => ({ key: 'urlRequired' }),
+      required: () => ({ key: 'notEmpty' }),
       notOneOf: () => ({ key: 'alreadyExists' })
     },
     string: {
-      url: () => ({ key: 'urlMustBeValid' })
+      url: () => ({ key: 'invalidUrl' })
     }
   });
 
   return i18n;
 };
 
-// Экспортируем функцию для получения текста в других модулях
-export const t = (key) => i18n.t(key);

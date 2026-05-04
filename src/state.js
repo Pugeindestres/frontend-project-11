@@ -1,5 +1,4 @@
-// src/state.js
-import { proxy } from 'valtio/vanilla';  // ← важно: /vanilla, а не просто 'valtio'
+import { proxy } from 'valtio/vanilla';
 
 const state = proxy({
   feeds: [],
@@ -9,7 +8,6 @@ const state = proxy({
   error: null,
 });
 
-// Вспомогательные функции для работы с состоянием
 export const addFeed = (feed) => {
   const exists = state.feeds.some(f => f.url === feed.url);
   if (!exists) {

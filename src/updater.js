@@ -1,4 +1,3 @@
-// src/updater.js
 import { loadRSS } from './api.js';
 import state, { addPosts, getPostsWithReadStatus } from './state.js';
 import { renderPosts } from './view.js';
@@ -6,7 +5,6 @@ import { renderPosts } from './view.js';
 let updateTimeout = null;
 let isUpdating = false;
 
-// Функция для получения даты последнего поста в фиде
 const getLastPostDate = (feedId) => {
   const feedPosts = state.posts.filter(post => post.feedId === feedId);
   if (feedPosts.length === 0) return null;
@@ -18,28 +16,23 @@ const getLastPostDate = (feedId) => {
   return new Date(latestPost.pubDate);
 };
 
-// Функция для проверки одного фида на наличие новых постов
 const checkFeedForUpdates = (feed) => {
   const lastPostDate = getLastPostDate(feed.id);
   
   return loadRSS(feed.url)
     .then(({ posts }) => {
-      // Фильтруем только новые посты (которых ещё нет в состоянии)
       const existingPostLinks = new Set(state.posts.map(p => p.link));
       
       let newPosts = posts.filter(post => !existingPostLinks.has(post.link));
       
-      // Если есть дата последнего поста, фильтруем по дате
       if (lastPostDate) {
         newPosts = newPosts.filter(post => new Date(post.pubDate) > lastPostDate);
       }
       
       if (newPosts.length > 0) {
-        // Добавляем новые посты в состояние
         addPosts(feed.id, newPosts);
         console.log(`Добавлено ${newPosts.length} новых постов из "${feed.title}"`);
         
-        // Обновляем UI
         const postsContainer = document.getElementById('postsContainer');
         if (postsContainer) {
           const postsWithStatus = getPostsWithReadStatus();
@@ -55,7 +48,6 @@ const checkFeedForUpdates = (feed) => {
     });
 };
 
-// Функция для проверки всех фидов
 const updateAllFeeds = () => {
   const feedsToCheck = [...state.feeds];
   
@@ -76,7 +68,6 @@ const updateAllFeeds = () => {
     });
 };
 
-// Рекурсивная функция для периодической проверки
 const scheduleUpdate = (intervalMs = 5000) => {
   if (updateTimeout) {
     clearTimeout(updateTimeout);
@@ -100,7 +91,6 @@ const scheduleUpdate = (intervalMs = 5000) => {
   updateTimeout = setTimeout(tick, intervalMs);
 };
 
-// Запуск обновлений
 export const startUpdater = (intervalMs = 5000) => {
   if (updateTimeout) {
     clearTimeout(updateTimeout);
@@ -109,7 +99,6 @@ export const startUpdater = (intervalMs = 5000) => {
   scheduleUpdate(intervalMs);
 };
 
-// Остановка обновлений
 export const stopUpdater = () => {
   if (updateTimeout) {
     clearTimeout(updateTimeout);

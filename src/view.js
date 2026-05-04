@@ -1,10 +1,11 @@
 import i18next from 'i18next';
 
-export const renderForm = (container, isLoading = false, errorKey = null) => {
-  if (!container) return;
-  
-  const errorClass = errorKey ? 'is-invalid' : '';
-  const errorMessage = errorKey ? i18next.t(errorKey) : '';
+let currentForm = null;
+let currentInput = null;
+let currentFeedback = null;
+
+export const initForm = (container) => {
+  if (!container) return null;
   
   container.innerHTML = `
     <form id="rssForm">
@@ -13,7 +14,7 @@ export const renderForm = (container, isLoading = false, errorKey = null) => {
         <div class="input-group">
           <input 
             type="url" 
-            class="form-control ${errorClass}" 
+            class="form-control" 
             id="rssUrl" 
             name="url"
             aria-label="url"
@@ -22,24 +23,71 @@ export const renderForm = (container, isLoading = false, errorKey = null) => {
           <button 
             type="submit" 
             class="btn btn-primary"
-            ${isLoading ? 'disabled' : ''}>
+            id="submitBtn">
             ${i18next.t('addButton')}
           </button>
         </div>
-        <div class="feedback ${errorKey ? 'text-danger' : ''}"></div>
+        <div class="feedback"></div>
       </div>
     </form>
   `;
   
-  const form = container.querySelector('#rssForm');
-  const input = container.querySelector('#rssUrl');
-  const feedback = container.querySelector('.feedback');
+  currentForm = container.querySelector('#rssForm');
+  currentInput = container.querySelector('#rssUrl');
+  currentFeedback = container.querySelector('.feedback');
   
-  if (errorMessage && feedback) {
-    feedback.textContent = errorMessage;
+  return { form: currentForm, input: currentInput, feedback: currentFeedback };
+};
+
+export const setLoading = (isLoading) => {
+  const submitBtn = currentForm?.querySelector('#submitBtn');
+  if (submitBtn) {
+    submitBtn.disabled = isLoading;
   }
-  
-  return { form, input, feedback };
+};
+
+export const setSuccess = (messageKey) => {
+  if (currentFeedback) {
+    currentFeedback.textContent = i18next.t(messageKey);
+    currentFeedback.classList.add('text-success');
+    currentFeedback.classList.remove('text-danger');
+    
+    setTimeout(() => {
+      if (currentFeedback.textContent === i18next.t(messageKey)) {
+        currentFeedback.textContent = '';
+        currentFeedback.classList.remove('text-success');
+      }
+    }, 5000);
+  }
+};
+
+export const setError = (errorKey) => {
+  if (currentInput) {
+    currentInput.classList.add('is-invalid');
+  }
+  if (currentFeedback) {
+    currentFeedback.textContent = i18next.t(errorKey);
+    currentFeedback.classList.add('text-danger');
+    currentFeedback.classList.remove('text-success');
+  }
+};
+
+export const clearError = () => {
+  if (currentInput) {
+    currentInput.classList.remove('is-invalid');
+  }
+  if (currentFeedback) {
+    currentFeedback.textContent = '';
+    currentFeedback.classList.remove('text-danger', 'text-success');
+  }
+};
+
+export const resetForm = () => {
+  if (currentInput) {
+    currentInput.value = '';
+    currentInput.focus();
+  }
+  clearError();
 };
 
 export const renderFeeds = (container, feeds) => {
@@ -108,7 +156,7 @@ export const renderPosts = (container, posts, onPreviewClick) => {
             <div class="post-item mb-3 p-3 border rounded" data-post-id="${post.id}">
               <div class="d-flex justify-content-between align-items-start">
                 <h4 class="post-title">
-                  <a href="${post.link}" target="_blank" class="${post.isRead ? 'fw-normal' : 'fw-bold'}">
+                  <a href="${post.link}" target="_blank" class="${post.isRead ? 'link-secondary' : 'fw-bold'}">
                     ${escapeHtml(post.title)}
                   </a>
                 </h4>
@@ -138,49 +186,6 @@ export const renderPosts = (container, posts, onPreviewClick) => {
         }
       });
     });
-  }
-};
-
-export const setError = (formElements, errorKey) => {
-  if (!formElements) return;
-  const { input, feedback } = formElements;
-  
-  if (input) {
-    input.classList.add('is-invalid');
-  }
-  if (feedback) {
-    feedback.textContent = i18next.t(errorKey);
-    feedback.classList.add('text-danger');
-  }
-};
-
-export const clearError = (formElements) => {
-  if (!formElements) return;
-  const { input, feedback } = formElements;
-  
-  if (input) {
-    input.classList.remove('is-invalid');
-  }
-  if (feedback) {
-    feedback.textContent = '';
-    feedback.classList.remove('text-danger');
-  }
-};
-
-export const showSuccess = (formElements, messageKey) => {
-  if (!formElements) return;
-  const { feedback } = formElements;
-  
-  if (feedback) {
-    feedback.textContent = i18next.t(messageKey);
-    feedback.classList.add('text-success');
-    
-    setTimeout(() => {
-      if (feedback.textContent === i18next.t(messageKey)) {
-        feedback.textContent = '';
-        feedback.classList.remove('text-success');
-      }
-    }, 5000);
   }
 };
 

@@ -1,4 +1,3 @@
-// src/api.js
 import axios from 'axios';
 import parseRSS from './parser.js';
 
@@ -14,12 +13,11 @@ export const loadRSS = (url) => {
         throw new Error('networkError');
       }
       const content = response.data.contents;
-      return parseRSS(content);
+      const parsed = parseRSS(content);
+      return parsed;
     })
     .catch(error => {
-      if (error.message === 'noValidRSS' || error.message === 'networkError') {
-        throw error;
-      }
+      if (error.message === 'noValidRSS') throw error;
       throw new Error('networkError');
     });
 };
