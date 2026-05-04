@@ -1,8 +1,23 @@
 import i18next from 'i18next';
 
+let currentForm = null;
 let currentInput = null;
-let currentFeedback = null;
 let currentSubmitBtn = null;
+
+// Функция для получения элемента фидбека (всегда актуальный)
+const getFeedbackElement = () => {
+  return document.querySelector('.feedback');
+};
+
+// Функция для получения элемента инпута
+const getInputElement = () => {
+  return document.querySelector('#rssUrl');
+};
+
+// Функция для получения кнопки
+const getSubmitButton = () => {
+  return document.querySelector('#submitBtn');
+};
 
 export const initForm = (container) => {
   if (!container) return null;
@@ -32,60 +47,69 @@ export const initForm = (container) => {
     </form>
   `;
   
-  const form = container.querySelector('#rssForm');
+  currentForm = container.querySelector('#rssForm');
   currentInput = container.querySelector('#rssUrl');
-  currentFeedback = container.querySelector('.feedback');
   currentSubmitBtn = container.querySelector('#submitBtn');
   
-  return { form, input: currentInput, feedback: currentFeedback };
+  return { form: currentForm, input: currentInput };
 };
 
 export const setLoading = (isLoading) => {
-  if (currentSubmitBtn) {
-    currentSubmitBtn.disabled = isLoading;
+  const btn = getSubmitButton();
+  if (btn) {
+    btn.disabled = isLoading;
   }
 };
 
 export const setSuccess = (messageKey) => {
-  if (currentFeedback) {
-    currentFeedback.textContent = i18next.t(messageKey);
-    currentFeedback.classList.add('text-success');
-    currentFeedback.classList.remove('text-danger');
+  const feedback = getFeedbackElement();
+  if (feedback) {
+    feedback.textContent = i18next.t(messageKey);
+    feedback.classList.add('text-success');
+    feedback.classList.remove('text-danger');
     
     setTimeout(() => {
-      if (currentFeedback && currentFeedback.textContent === i18next.t(messageKey)) {
-        currentFeedback.textContent = '';
-        currentFeedback.classList.remove('text-success');
+      const fb = getFeedbackElement();
+      if (fb && fb.textContent === i18next.t(messageKey)) {
+        fb.textContent = '';
+        fb.classList.remove('text-success');
       }
     }, 5000);
   }
 };
 
 export const setError = (errorKey) => {
-  if (currentInput) {
-    currentInput.classList.add('is-invalid');
+  const input = getInputElement();
+  const feedback = getFeedbackElement();
+  
+  if (input) {
+    input.classList.add('is-invalid');
   }
-  if (currentFeedback) {
-    currentFeedback.textContent = i18next.t(errorKey);
-    currentFeedback.classList.add('text-danger');
-    currentFeedback.classList.remove('text-success');
+  if (feedback) {
+    feedback.textContent = i18next.t(errorKey);
+    feedback.classList.add('text-danger');
+    feedback.classList.remove('text-success');
   }
 };
 
 export const clearError = () => {
-  if (currentInput) {
-    currentInput.classList.remove('is-invalid');
+  const input = getInputElement();
+  const feedback = getFeedbackElement();
+  
+  if (input) {
+    input.classList.remove('is-invalid');
   }
-  if (currentFeedback) {
-    currentFeedback.textContent = '';
-    currentFeedback.classList.remove('text-danger', 'text-success');
+  if (feedback) {
+    feedback.textContent = '';
+    feedback.classList.remove('text-danger', 'text-success');
   }
 };
 
 export const resetForm = () => {
-  if (currentInput) {
-    currentInput.value = '';
-    currentInput.focus();
+  const input = getInputElement();
+  if (input) {
+    input.value = '';
+    input.focus();
   }
   clearError();
 };
