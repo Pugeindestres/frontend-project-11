@@ -1,5 +1,8 @@
+setup:
+	npm ci
+
 install:
-	npm install
+	npm ci
 
 dev:
 	npm run dev
@@ -7,7 +10,14 @@ dev:
 build:
 	npm run build
 
-preview:
-	npm run preview
+start:
+	npm run dev
 
-.PHONY: install dev build preview
+lint:
+	npx eslint .
+
+lint-fix:
+	npx eslint . --fix
+
+test:
+	npx playwright test

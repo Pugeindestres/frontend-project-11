@@ -1,37 +1,38 @@
-import * as yup from 'yup'
-import i18next from './locales.js'
+import ru from './locales.js';
 
-// Настройка сообщений yup на русском
-yup.setLocale({
-  mixed: {
-    required: () => i18next.t('errors.required'),
-    notType: () => i18next.t('errors.invalidUrl')
-  },
-  string: {
-    url: () => i18next.t('errors.invalidUrl')
+export function validateUrl(url) {
+  if (!url || url.trim() === '') {
+    return { isValid: false, error: ru.notEmpty };
   }
-})
-
-// Создание схемы валидации
-const createUrlSchema = () => {
-  return yup.string()
-    .required()
-    .url()
-}
-
-export const validateUrl = (url, existingUrls) => {
-  const schema = createUrlSchema()
   
-  return schema.validate(url)
-    .then(() => {
-      if (existingUrls.includes(url)) {
-        throw new Error(i18next.t('errors.duplicate'))
-      }
-      return true
-    })
-    .catch(error => {
-      throw new Error(error.message)
-    })
+  try {
+    const urlObj = new URL(url);
+    if (urlObj.protocol !== 'http:' && urlObj.protocol !== 'https:') {
+      return { isValid: false, error: ru.invalidUrl };
+    }
+    return { isValid: true, error: null };
+  } catch {
+    return { isValid: false, error: ru.invalidUrl };
+  }
 }
 
-export default validateUrl
+export function validateRSSContent(xmlText) {
+  try {
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+    
+    const parserError = xmlDoc.querySelector('parsererror');
+    if (parserError) {
+      return { isValid: false, error: ru.noValidRSS };
+    }
+    
+    const channel = xmlDoc.querySelector('channel');
+    if (!channel) {
+      return { isValid: false, error: ru.noValidRSS };
+    }
+    
+    return { isValid: true, error: null, xmlDoc };
+  } catch {
+    return { isValid: false, error: ru.noValidRSS };
+  }
+}

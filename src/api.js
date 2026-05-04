@@ -1,38 +1,124 @@
-const parseRSS = (xmlText) => {
-  const parser = new DOMParser()
-  const doc = parser.parseFromString(xmlText, 'text/xml')
-  
-  const parseError = doc.querySelector('parsererror')
-  if (parseError) {
-    throw new Error('Invalid RSS feed')
+import ru from './locales.js';
+import { validateUrl, validateRSSContent } from './validator.js';
+import { getFeeds, addFeed, addPosts } from './state.js';
+import { showFeedback } from './view.js';
+
+export async function addRSSFeed(url) {
+  const urlValidation = validateUrl(url);
+  if (!urlValidation.isValid) {
+    showFeedback(urlValidation.error, true);
+    return false;
   }
   
-  const title = doc.querySelector('title')?.textContent || 'Без названия'
-  const description = doc.querySelector('description')?.textContent || ''
-  const items = Array.from(doc.querySelectorAll('item')).map(item => ({
-    title: item.querySelector('title')?.textContent || '',
-    link: item.querySelector('link')?.textContent || '',
-    description: item.querySelector('description')?.textContent || '',
-    pubDate: item.querySelector('pubDate')?.textContent || ''
-  }))
+  const feeds = getFeeds();
+  if (feeds.some(feed => feed.url === url)) {
+    showFeedback(ru.alreadyExists, true);
+    return false;
+  }
   
-  return { title, description, items, url: '' }
+  try {
+    // Используем allorigins.win для обхода CORS
+    const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+    
+    if (!response.ok) {
+      throw new Error('Network error');
+    }
+    
+    const data = await response.json();
+    const text = data.contents;
+    
+    const rssValidation = validateRSSContent(text);
+    
+    if (!rssValidation.isValid) {
+      showFeedback(rssValidation.error, true);
+      return false;
+    }
+    
+    const { xmlDoc } = rssValidation;
+    const channel = xmlDoc.querySelector('channel');
+    const title = channel.querySelector('title')?.textContent || url;
+    
+    const feed = {
+      id: Date.now().toString(),
+      url,
+      title,
+      createdAt: new Date(),
+    };
+    
+    addFeed(feed);
+    
+    const posts = parsePosts(xmlDoc, feed.id, title);
+    addPosts(feed.id, posts);
+    
+    showFeedback(ru.successLoad, false);
+    return true;
+    
+  } catch (error) {
+    console.error('Error adding RSS:', error);
+    showFeedback(ru.networkError, true);
+    return false;
+  }
 }
 
-export const fetchRSS = (url) => {
-  return fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Network error')
-      }
-      return response.json()
-    })
-    .then(data => {
-      if (!data.contents) {
-        throw new Error('Empty response')
-      }
-      const feed = parseRSS(data.contents)
-      feed.url = url
-      return feed
-    })
+function parsePosts(xmlDoc, feedId, feedTitle) {
+  const items = xmlDoc.querySelectorAll('item');
+  const posts = [];
+  
+  items.forEach(item => {
+    const title = item.querySelector('title')?.textContent || '';
+    const link = item.querySelector('link')?.textContent || '';
+    const description = item.querySelector('description')?.textContent || '';
+    const pubDateStr = item.querySelector('pubDate')?.textContent || '';
+    const pubDate = new Date(pubDateStr);
+    
+    posts.push({
+      id: `${feedId}_${Date.now()}_${Math.random()}`,
+      title,
+      link,
+      description,
+      pubDate: isNaN(pubDate.getTime()) ? new Date() : pubDate,
+      feedTitle,
+    });
+  });
+  
+  return posts;
+}
+
+export async function loadPosts(url, options = {}) {
+  const { skipExisting = false, lastPostDate = null } = options;
+  
+  try {
+    // Используем allorigins.win для обхода CORS
+    const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+    const data = await response.json();
+    const text = data.contents;
+    
+    const rssValidation = validateRSSContent(text);
+    
+    if (!rssValidation.isValid) {
+      return [];
+    }
+    
+    const { xmlDoc } = rssValidation;
+    const channel = xmlDoc.querySelector('channel');
+    const feedTitle = channel.querySelector('title')?.textContent || url;
+    let posts = parsePosts(xmlDoc, null, feedTitle);
+    
+    if (skipExisting) {
+      // Получаем существующие посты из state
+      const { getPosts } = await import('./state.js');
+      const existingPosts = getPosts();
+      const existingUrls = new Set(existingPosts.map(p => p.link));
+      posts = posts.filter(post => !existingUrls.has(post.link));
+    }
+    
+    if (lastPostDate) {
+      posts = posts.filter(post => new Date(post.pubDate) > lastPostDate);
+    }
+    
+    return posts;
+  } catch (error) {
+    console.error('Error loading posts:', error);
+    return [];
+  }
 }
