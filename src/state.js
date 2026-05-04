@@ -1,5 +1,5 @@
 // src/state.js
-import { proxy } from 'valtio';
+import { proxy } from 'valtio/vanilla';  // ← важно: /vanilla, а не просто 'valtio'
 
 const state = proxy({
   feeds: [],
@@ -25,26 +25,22 @@ export const addPosts = (feedId, newPosts) => {
       ...post,
       id: `${feedId}_${Date.now()}_${Math.random()}`,
       feedId,
-      feedTitle: post.feedTitle || state.feeds.find(f => f.id === feedId)?.title || '',
+      feedTitle: post.feedTitle || '',
     }));
   
   if (postsToAdd.length > 0) {
-    // Добавляем новые посты в конец массива (сохраняем порядок)
     state.posts.push(...postsToAdd);
   }
 };
 
-// Отметка поста как прочитанного
 export const markAsRead = (postId) => {
   if (!state.readPosts.has(postId)) {
     state.readPosts.add(postId);
   }
 };
 
-// Проверка, прочитан ли пост
 export const isRead = (postId) => state.readPosts.has(postId);
 
-// Получение постов с флагом прочтения
 export const getPostsWithReadStatus = () => {
   return state.posts.map(post => ({
     ...post,
