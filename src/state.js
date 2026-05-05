@@ -5,12 +5,10 @@ const state = proxy({
   posts: [],
   readPosts: new Set(),
   loading: false,
-  error: null,
 });
 
 export const addFeed = (feed) => {
-  const exists = state.feeds.some(f => f.url === feed.url);
-  if (!exists) {
+  if (!state.feeds.some(f => f.url === feed.url)) {
     state.feeds.push(feed);
   }
 };
@@ -25,7 +23,7 @@ export const addPosts = (feedId, newPosts) => {
       feedId,
     }));
   
-  if (postsToAdd.length > 0) {
+  if (postsToAdd.length) {
     state.posts.push(...postsToAdd);
   }
 };
@@ -36,19 +34,10 @@ export const markAsRead = (postId) => {
   }
 };
 
-export const getPostsWithReadStatus = () => {
-  return state.posts.map(post => ({
-    ...post,
-    isRead: state.readPosts.has(post.id),
-  }));
-};
+export const getPostsWithReadStatus = () => state.posts.map(post => ({
+  ...post,
+  isRead: state.readPosts.has(post.id),
+}));
 
-export const setLoading = (value) => {
-  state.loading = value;
-};
-
-export const setError = (error) => {
-  state.error = error;
-};
-
+export const setLoading = (loading) => { state.loading = loading; };
 export default state;

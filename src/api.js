@@ -1,20 +1,17 @@
 import axios from 'axios';
 import parseRSS from './parser.js';
 
+const PROXY_URL = 'https://allorigins.hexlet.app/get';
+
 export const loadRSS = (url) => {
-  const proxyUrl = 'https://allorigins.hexlet.app/get';
-  const requestUrl = `${proxyUrl}?disableCache=true&url=${encodeURIComponent(url)}`;
-  
-  return axios.get(requestUrl)
+  return axios.get(`${PROXY_URL}?disableCache=true&url=${encodeURIComponent(url)}`)
     .then(response => {
       if (response.data.status === 'error' || !response.data.contents) {
         throw new Error('networkError');
       }
-      const content = response.data.contents;
-      return parseRSS(content);
+      return parseRSS(response.data.contents);
     })
     .catch(error => {
-      if (error.message === 'noValidRSS') throw error;
-      throw new Error('networkError');
+      throw new Error(error.message === 'noValidRSS' ? 'noValidRSS' : 'networkError');
     });
 };

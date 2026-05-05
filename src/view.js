@@ -1,26 +1,24 @@
-let currentForm = null;
-let currentInput = null;
-let currentSubmitBtn = null;
+let formElements = null;
 
-const headings = {
-  feedsTitle: 'Фиды',
-  postsTitle: 'Посты',
+const MSG = {
+  feedTitle: 'Фиды',
+  postTitle: 'Посты',
   rssLabel: 'Ссылка RSS',
   addButton: 'Добавить',
   previewButton: 'Просмотр',
   closeButton: 'Закрыть',
   readFullButton: 'Читать полностью',
-  successLoad: 'RSS успешно загружен',
+  success: 'RSS успешно загружен',
   alreadyExists: 'RSS уже существует',
   notEmpty: 'Не должно быть пустым',
   invalidUrl: 'Ссылка должна быть валидным URL',
   noValidRSS: 'Ресурс не содержит валидный RSS',
   networkError: 'Ошибка сети',
-  modalGoal: 'Цель: Научиться извлекать из дерева необходимые данные'
 };
 
-const getInputElement = () => document.querySelector('#rssUrl');
-const getSubmitButton = () => document.querySelector('#submitBtn');
+const getInput = () => document.querySelector('#rssUrl');
+const getSubmitBtn = () => document.querySelector('#submitBtn');
+const getFeedback = () => document.querySelector('#rssFeedback');
 
 export const initForm = (container) => {
   if (!container) return null;
@@ -28,149 +26,108 @@ export const initForm = (container) => {
   container.innerHTML = `
     <form id="rssForm">
       <div class="mb-3">
-        <label for="rssUrl" class="form-label">${headings.rssLabel}</label>
+        <label for="rssUrl" class="form-label">${MSG.rssLabel}</label>
         <div class="input-group">
           <input type="text" class="form-control" id="rssUrl" name="url" aria-label="url" autocomplete="off" placeholder="https://example.com/rss">
-          <button type="submit" class="btn btn-primary" id="submitBtn">${headings.addButton}</button>
+          <button type="submit" class="btn btn-primary" id="submitBtn">${MSG.addButton}</button>
         </div>
         <div id="rssFeedback" class="feedback form-text"></div>
       </div>
     </form>
   `;
   
-  currentForm = container.querySelector('#rssForm');
-  currentInput = container.querySelector('#rssUrl');
-  currentSubmitBtn = container.querySelector('#submitBtn');
-  
-  return { form: currentForm, input: currentInput };
+  formElements = { form: container.querySelector('#rssForm'), input: container.querySelector('#rssUrl') };
+  return formElements;
 };
 
 export const setLoading = (isLoading) => {
-  const btn = getSubmitButton();
+  const btn = getSubmitBtn();
   if (btn) btn.disabled = isLoading;
 };
 
 export const setSuccess = () => {
-  const feedback = document.getElementById('rssFeedback');
-  if (feedback) {
-    feedback.textContent = headings.successLoad;
-    feedback.classList.add('text-success');
-    feedback.classList.remove('text-danger');
+  const fb = getFeedback();
+  if (fb) {
+    fb.textContent = MSG.success;
+    fb.classList.add('text-success');
+    fb.classList.remove('text-danger');
+    setTimeout(() => { if (fb) fb.textContent = ''; }, 5000);
   }
 };
 
-export const setError = (errorKey) => {
-  const input = getInputElement();
-  const feedback = document.getElementById('rssFeedback');
-  
-  const messages = {
-    notEmpty: headings.notEmpty,
-    invalidUrl: headings.invalidUrl,
-    alreadyExists: headings.alreadyExists,
-    noValidRSS: headings.noValidRSS,
-    networkError: headings.networkError
-  };
-  
-  const message = messages[errorKey] || errorKey;
-  
+export const setError = (key) => {
+  const input = getInput();
+  const fb = getFeedback();
+  const messages = { notEmpty: MSG.notEmpty, invalidUrl: MSG.invalidUrl, alreadyExists: MSG.alreadyExists, noValidRSS: MSG.noValidRSS, networkError: MSG.networkError };
+  const message = messages[key] || key;
   if (input) input.classList.add('is-invalid');
-  if (feedback) {
-    feedback.textContent = message;
-    feedback.classList.add('text-danger');
-    feedback.classList.remove('text-success');
+  if (fb) {
+    fb.textContent = message;
+    fb.classList.add('text-danger');
+    fb.classList.remove('text-success');
   }
 };
 
 export const clearError = () => {
-  const input = getInputElement();
-  const feedback = document.getElementById('rssFeedback');
+  const input = getInput();
+  const fb = getFeedback();
   if (input) input.classList.remove('is-invalid');
-  if (feedback) feedback.textContent = '';
+  if (fb) fb.textContent = '';
 };
 
 export const resetForm = () => {
-  const input = getInputElement();
-  if (input) {
-    input.value = '';
-    input.focus();
-  }
+  const input = getInput();
+  if (input) { input.value = ''; input.focus(); }
   clearError();
 };
 
 export const renderFeeds = (container, feeds) => {
   if (!container) return;
-  
-  if (!feeds || feeds.length === 0) {
-    container.innerHTML = '<div class="feeds"><div class="card"><div class="card-body"><h3>Фиды</h3><p class="text-muted">Нет добавленных RSS</p></div></div></div>';
+  if (!feeds?.length) {
+    container.innerHTML = `<div class="feeds"><div class="card"><div class="card-body"><h3>${MSG.feedTitle}</h3><p class="text-muted">Нет добавленных RSS</p></div></div></div>`;
     return;
   }
-  
-  let html = '<div class="feeds"><div class="card"><div class="card-body"><h3>Фиды</h3><ul class="list-group">';
-  feeds.forEach(feed => {
-    html += `<li class="list-group-item"><strong>${escapeHtml(feed.title)}</strong>${feed.description ? `<br><small class="text-muted">${escapeHtml(feed.description)}</small>` : ''}</li>`;
-  });
-  html += '</ul></div></div></div>';
+  let html = `<div class="feeds"><div class="card"><div class="card-body"><h3>${MSG.feedTitle}</h3><ul class="list-group">`;
+  feeds.forEach(feed => { html += `<li class="list-group-item"><strong>${escapeHtml(feed.title)}</strong>${feed.description ? `<br><small>${escapeHtml(feed.description)}</small>` : ''}</li>`; });
+  html += `</ul></div></div></div>`;
   container.innerHTML = html;
 };
 
 export const renderPosts = (container, posts, onPreviewClick) => {
   if (!container) return;
-  
-  if (!posts || posts.length === 0) {
-    container.innerHTML = '<div class="posts"><div class="card"><div class="card-body"><h3>Посты</h3><p class="text-muted">Нет постов</p></div></div></div>';
+  if (!posts?.length) {
+    container.innerHTML = `<div class="posts"><div class="card"><div class="card-body"><h3>${MSG.postTitle}</h3><p class="text-muted">Нет постов</p></div></div></div>`;
     return;
   }
-  
   const sorted = [...posts].sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
-  
-  let html = '<div class="posts"><div class="card"><div class="card-body"><h3>Посты</h3>';
+  let html = `<div class="posts"><div class="card"><div class="card-body"><h3>${MSG.postTitle}</h3>`;
   sorted.forEach(post => {
     html += `
       <div class="post-item mb-3 p-3 border rounded" data-post-id="${post.id}">
         <div class="d-flex justify-content-between align-items-start">
-          <h4 class="post-title">
-            <a href="${post.link || '#'}" target="_blank" class="${post.isRead ? 'link-secondary' : 'fw-bold'}">${escapeHtml(post.title)}</a>
-          </h4>
-          <button class="btn btn-sm btn-outline-secondary preview-btn" data-post-id="${post.id}">${headings.previewButton}</button>
+          <h4 class="post-title"><a href="${post.link || '#'}" target="_blank" class="${post.isRead ? 'link-secondary' : 'fw-bold'}">${escapeHtml(post.title)}</a></h4>
+          <button class="btn btn-sm btn-outline-secondary preview-btn" data-post-id="${post.id}">${MSG.previewButton}</button>
         </div>
-        <div class="post-meta text-muted small mt-2">
-          <span class="feed-title">${escapeHtml(post.feedTitle || '')}</span>
-          <span class="post-date ms-2">${formatDate(post.pubDate)}</span>
-        </div>
+        <div class="post-meta text-muted small mt-2"><span class="feed-title">${escapeHtml(post.feedTitle || '')}</span></div>
         <p class="mt-2">${escapeHtml(post.description?.substring(0, 200) || '')}...</p>
       </div>
     `;
   });
-  html += '</div></div></div>';
+  html += `</div></div></div>`;
   container.innerHTML = html;
-  
   if (onPreviewClick) {
     document.querySelectorAll('.preview-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.onclick = (e) => {
         e.preventDefault();
-        const postId = btn.dataset.postId;
-        const post = sorted.find(p => p.id === postId);
+        const post = sorted.find(p => p.id === btn.dataset.postId);
         if (post) onPreviewClick(post);
-      });
+      };
     });
   }
 };
 
-function formatDate(dateString) {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return '';
-  return date.toLocaleString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-}
-
 function escapeHtml(str) {
   if (!str) return '';
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  return str.replace(/[&<>]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
 }
 

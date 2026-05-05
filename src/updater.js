@@ -2,92 +2,26 @@ import { loadRSS } from './api.js';
 import state, { addPosts, getPostsWithReadStatus } from './state.js';
 import { renderPosts } from './view.js';
 
-let updateTimeout = null;
-let isUpdating = false;
+let timeout = null;
+let updating = false;
 
-const getLastPostDate = (feedId) => {
-  const feedPosts = state.posts.filter(post => post.feedId === feedId);
-  if (feedPosts.length === 0) return null;
-  
-  const latestPost = feedPosts.reduce((latest, post) => {
-    return new Date(post.pubDate) > new Date(latest.pubDate) ? post : latest;
-  }, feedPosts[0]);
-  
-  return new Date(latestPost.pubDate);
-};
-
-const checkFeedForUpdates = (feed) => {
-  const lastPostDate = getLastPostDate(feed.id);
-  
-  return loadRSS(feed.url)
-    .then(({ posts }) => {
-      const existingPostLinks = new Set(state.posts.map(p => p.link));
-      
-      let newPosts = posts.filter(post => !existingPostLinks.has(post.link));
-      
-      if (lastPostDate) {
-        newPosts = newPosts.filter(post => new Date(post.pubDate) > lastPostDate);
-      }
-      
-      if (newPosts.length > 0) {
-        addPosts(feed.id, newPosts);
-        
-        const postsContainer = document.getElementById('postsContainer');
-        if (postsContainer) {
-          const postsWithStatus = getPostsWithReadStatus();
-          renderPosts(postsContainer, postsWithStatus, null);
-        }
-      }
-      
-      return newPosts.length;
-    })
-    .catch(() => 0);
-};
-
-const updateAllFeeds = () => {
-  const feedsToCheck = [...state.feeds];
-  
-  if (feedsToCheck.length === 0) {
-    return Promise.resolve();
-  }
-  
-  const promises = feedsToCheck.map(feed => checkFeedForUpdates(feed));
-  return Promise.all(promises);
-};
-
-const scheduleUpdate = (intervalMs = 5000) => {
-  if (updateTimeout) clearTimeout(updateTimeout);
-  
+export const startUpdater = (interval = 5000) => {
+  if (timeout) clearTimeout(timeout);
   const tick = () => {
-    if (isUpdating) {
-      updateTimeout = setTimeout(tick, intervalMs);
-      return;
-    }
-    
-    isUpdating = true;
-    
-    updateAllFeeds()
-      .finally(() => {
-        isUpdating = false;
-        updateTimeout = setTimeout(tick, intervalMs);
-      });
+    if (updating) { timeout = setTimeout(tick, interval); return; }
+    updating = true;
+    Promise.all(state.feeds.map(feed =>
+      loadRSS(feed.url).then(({ posts }) => {
+        const newPosts = posts.filter(p => !state.posts.some(ex => ex.link === p.link));
+        if (newPosts.length) {
+          addPosts(feed.id, newPosts);
+          const container = document.getElementById('postsContainer');
+          if (container) renderPosts(container, getPostsWithReadStatus(), null);
+        }
+      }).catch(() => {})
+    )).finally(() => { updating = false; timeout = setTimeout(tick, interval); });
   };
-  
-  updateTimeout = setTimeout(tick, intervalMs);
+  timeout = setTimeout(tick, interval);
 };
 
-export const startUpdater = (intervalMs = 5000) => {
-  if (updateTimeout) {
-    clearTimeout(updateTimeout);
-    isUpdating = false;
-  }
-  scheduleUpdate(intervalMs);
-};
-
-export const stopUpdater = () => {
-  if (updateTimeout) {
-    clearTimeout(updateTimeout);
-    updateTimeout = null;
-    isUpdating = false;
-  }
-};
+export const stopUpdater = () => { if (timeout) { clearTimeout(timeout); timeout = null; updating = false; } };
