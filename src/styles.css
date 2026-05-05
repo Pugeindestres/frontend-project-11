@@ -26,6 +26,10 @@
   font-weight: 400 !important;
 }
 
+.link-secondary {
+  color: #6c757d !important;
+}
+
 .post-item {
   transition: background-color 0.3s;
   background-color: #fff;
@@ -46,26 +50,6 @@
 
 .list-group-item {
   word-break: break-all;
-}
-
-.text-danger {
-  color: #dc3545 !important;
-}
-
-.text-success {
-  color: #198754 !important;
-}
-
-.is-invalid {
-  border-color: #dc3545 !important;
-}
-
-.feedback {
-  margin-top: 8px;
-  font-size: 14px;
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
 }
 
 .text-danger {

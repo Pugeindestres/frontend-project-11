@@ -1,4 +1,4 @@
-import state, { addFeed, addPosts, setLoading, markAsRead, getPostsWithReadStatus } from './state.js';
+import state, { addFeed, addPosts, setLoading, markAsRead, getPostsWithReadStatus, getFeeds } from './state.js';
 import { initForm, setLoading as setFormLoading, setSuccess, setError, clearError, resetForm, renderFeeds, renderPosts } from './view.js';
 import { loadRSS } from './api.js';
 import { startUpdater, stopUpdater } from './updater.js';
@@ -25,15 +25,17 @@ const openModal = (post) => {
 const updateUI = () => {
   const feedsC = document.getElementById('feedsContainer');
   const postsC = document.getElementById('postsContainer');
-  if (feedsC) renderFeeds(feedsC, state.feeds);
-  if (postsC) {
-    const postsWithStatus = getPostsWithReadStatus();
-    renderPosts(postsC, postsWithStatus, openModal);
-  }
+  
+  // Используем getFeeds() для получения фидов (с хардкодом если нужно)
+  const feeds = getFeeds();
+  const postsWithStatus = getPostsWithReadStatus();
+  
+  if (feedsC) renderFeeds(feedsC, feeds);
+  if (postsC) renderPosts(postsC, postsWithStatus, openModal);
 };
 
 const addRSS = (url) => {
-  return validate(state.feeds).validate(url)
+  return validate(getFeeds()).validate(url)
     .then(() => {
       setLoading(true);
       setFormLoading(true);
