@@ -65,6 +65,7 @@ export const setError = (key) => {
     fb.textContent = message;
     fb.classList.add('text-danger');
     fb.classList.remove('text-success');
+    setTimeout(() => { if (fb && fb.textContent === message) fb.textContent = ''; }, 5000);
   }
 };
 
@@ -72,7 +73,7 @@ export const clearError = () => {
   const input = getInput();
   const fb = getFeedback();
   if (input) input.classList.remove('is-invalid');
-  if (fb) fb.textContent = '';
+  if (fb && fb.textContent !== MSG.success) fb.textContent = '';
 };
 
 export const resetForm = () => {
@@ -84,23 +85,23 @@ export const resetForm = () => {
 export const renderFeeds = (container, feeds) => {
   if (!container) return;
   if (!feeds?.length) {
-    container.innerHTML = `<div class="feeds"><div class="card"><div class="card-body"><h3>${MSG.feedTitle}</h3><p class="text-muted">Нет добавленных RSS</p></div></div></div>`;
+    container.innerHTML = `<div class="card"><div class="card-body"><h3>${MSG.feedTitle}</h3><p class="text-muted">Нет добавленных RSS</p></div></div>`;
     return;
   }
-  let html = `<div class="feeds"><div class="card"><div class="card-body"><h3>${MSG.feedTitle}</h3><ul class="list-group">`;
-  feeds.forEach(feed => { html += `<li class="list-group-item"><strong>${escapeHtml(feed.title)}</strong>${feed.description ? `<br><small>${escapeHtml(feed.description)}</small>` : ''}</li>`; });
-  html += `</ul></div></div></div>`;
+  let html = `<div class="card"><div class="card-body"><h3>${MSG.feedTitle}</h3><ul class="list-group">`;
+  feeds.forEach(feed => { html += `<li class="list-group-item"><strong>${escapeHtml(feed.title)}</strong>${feed.description ? `<br><small class="text-muted">${escapeHtml(feed.description)}</small>` : ''}</li>`; });
+  html += `</ul></div></div>`;
   container.innerHTML = html;
 };
 
 export const renderPosts = (container, posts, onPreviewClick) => {
   if (!container) return;
   if (!posts?.length) {
-    container.innerHTML = `<div class="posts"><div class="card"><div class="card-body"><h3>${MSG.postTitle}</h3><p class="text-muted">Нет постов</p></div></div></div>`;
+    container.innerHTML = `<div class="card"><div class="card-body"><h3>${MSG.postTitle}</h3><p class="text-muted">Нет постов</p></div></div>`;
     return;
   }
   const sorted = [...posts].sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
-  let html = `<div class="posts"><div class="card"><div class="card-body"><h3>${MSG.postTitle}</h3>`;
+  let html = `<div class="card"><div class="card-body"><h3>${MSG.postTitle}</h3>`;
   sorted.forEach(post => {
     html += `
       <div class="post-item mb-3 p-3 border rounded" data-post-id="${post.id}">
@@ -113,7 +114,7 @@ export const renderPosts = (container, posts, onPreviewClick) => {
       </div>
     `;
   });
-  html += `</div></div></div>`;
+  html += `</div></div>`;
   container.innerHTML = html;
   if (onPreviewClick) {
     document.querySelectorAll('.preview-btn').forEach(btn => {
@@ -130,4 +131,3 @@ function escapeHtml(str) {
   if (!str) return '';
   return str.replace(/[&<>]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
 }
-
