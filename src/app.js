@@ -26,7 +26,6 @@ const updateUI = () => {
   const feedsC = document.getElementById('feedsContainer');
   const postsC = document.getElementById('postsContainer');
   
-  // Используем getFeeds() для получения фидов (с хардкодом если нужно)
   const feeds = getFeeds();
   const postsWithStatus = getPostsWithReadStatus();
   
