@@ -26,7 +26,7 @@ const openModal = (post) => {
   const fullLink = modalElement.querySelector('.full-article-link');
   
   if (modalTitle) modalTitle.textContent = post.title;
-  if (modalBody) modalBody.innerHTML = `<p>${escapeHtml(post.description || headings.modalGoal)}</p>`;
+  if (modalBody) modalBody.innerHTML = `<p>${escapeHtml(post.description || 'Цель: Научиться извлекать из дерева необходимые данные')}</p>`;
   if (fullLink) fullLink.href = post.link;
   
   if (!state.readPosts.has(post.id)) {
@@ -78,20 +78,24 @@ const addRSS = (url) => {
       return true;
     })
     .catch((err) => {
-      let errorMessage;
+      let errorKey = 'networkError';
       
       if (err.message === 'noValidRSS') {
-        errorMessage = headings.noValidRSS;
-      } else if (err.message === 'networkError') {
-        errorMessage = headings.networkError;
+        errorKey = 'noValidRSS';
       } else if (err.name === 'ValidationError') {
-        errorMessage = err.message;
-      } else {
-        errorMessage = headings.networkError;
+        if (err.message === 'alreadyExists') {
+          errorKey = 'alreadyExists';
+        } else if (err.type === 'required') {
+          errorKey = 'notEmpty';
+        } else if (err.type === 'url') {
+          errorKey = 'invalidUrl';
+        } else {
+          errorKey = err.message;
+        }
       }
       
-      setStateError(errorMessage);
-      setError(errorMessage);
+      setStateError(errorKey);
+      setError(errorKey);
       throw err;
     })
     .finally(() => {
@@ -109,19 +113,14 @@ const attachSubmitHandler = (form) => {
     if (url) {
       addRSS(url);
     } else {
-      setError(headings.notEmpty);
+      setError('notEmpty');
     }
   });
 };
 
 function escapeHtml(str) {
   if (!str) return '';
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 export default () => {
