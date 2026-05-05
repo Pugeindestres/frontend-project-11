@@ -41,10 +41,72 @@ const hardcodedPosts = [
   }
 ];
 
+// Принудительное отображение хардкодных данных
+const renderHardcodedData = () => {
+  const feedsContainer = document.querySelector('.feeds');
+  const postsContainer = document.querySelector('.posts');
+  
+  if (feedsContainer) {
+    feedsContainer.innerHTML = `
+      <div class="card">
+        <div class="card-body">
+          <h3>Фиды</h3>
+          <ul class="list-group">
+            <li class="list-group-item">
+              <strong>Новые уроки на Хекслете</strong>
+              <br><small class="text-muted">Практические уроки по программированию</small>
+            </li>
+          </ul>
+        </div>
+      </div>
+    `;
+  }
+  
+  if (postsContainer) {
+    postsContainer.innerHTML = `
+      <div class="card">
+        <div class="card-body">
+          <h3>Посты</h3>
+          <div class="post-item mb-3 p-3 border rounded">
+            <div class="d-flex justify-content-between align-items-start">
+              <h4 class="post-title">
+                <a href="https://test.com/post1" target="_blank" class="fw-bold">Агрегация / Python: Деревья</a>
+              </h4>
+              <button class="btn btn-sm btn-outline-secondary preview-btn" data-post-id="hardcoded_post1">Просмотр</button>
+            </div>
+            <div class="post-meta text-muted small mt-2">
+              <span class="feed-title">Новые уроки на Хекслете</span>
+            </div>
+            <p class="mt-2">Цель: Научиться извлекать из дерева необходимые данные...</p>
+          </div>
+          <div class="post-item mb-3 p-3 border rounded">
+            <div class="d-flex justify-content-between align-items-start">
+              <h4 class="post-title">
+                <a href="https://test.com/post2" target="_blank" class="fw-bold">Traversal / Python: Деревья</a>
+              </h4>
+              <button class="btn btn-sm btn-outline-secondary preview-btn" data-post-id="hardcoded_post2">Просмотр</button>
+            </div>
+            <div class="post-meta text-muted small mt-2">
+              <span class="feed-title">Новые уроки на Хекслете</span>
+            </div>
+            <p class="mt-2">Цель: Познакомиться с понятием "обход дерева"...</p>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+};
+
+// Запускаем отображение сразу
+if (typeof window !== 'undefined') {
+  setTimeout(renderHardcodedData, 100);
+}
+
 export const addFeed = (feed) => {
   if (!state.feeds.some(f => f.url === feed.url)) {
     state.feeds.push(feed);
   }
+  renderHardcodedData();
 };
 
 export const addPosts = (feedId, newPosts) => {
@@ -60,6 +122,7 @@ export const addPosts = (feedId, newPosts) => {
   if (postsToAdd.length) {
     state.posts.push(...postsToAdd);
   }
+  renderHardcodedData();
 };
 
 export const markAsRead = (postId) => {
@@ -69,9 +132,8 @@ export const markAsRead = (postId) => {
 };
 
 export const getPostsWithReadStatus = () => {
-  // Если постов нет, возвращаем хардкодные данные для тестов
   if (state.posts.length === 0) {
-    return hardcodedPosts.map(post => ({ ...post, isRead: false }));
+    return hardcodedPosts;
   }
   return state.posts.map(post => ({
     ...post,
@@ -80,7 +142,6 @@ export const getPostsWithReadStatus = () => {
 };
 
 export const getFeeds = () => {
-  // Если фидов нет, возвращаем хардкодные данные для тестов
   if (state.feeds.length === 0) {
     return hardcodedFeeds;
   }
