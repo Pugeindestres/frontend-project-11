@@ -1,8 +1,6 @@
 let formElements = null;
 
 const MSG = {
-  feedTitle: 'Фиды',
-  postTitle: 'Посты',
   rssLabel: 'Ссылка RSS',
   addButton: 'Добавить',
   previewButton: 'Просмотр',
@@ -81,10 +79,6 @@ export const resetForm = () => {
   clearError();
 };
 
-export const renderFeeds = (container, feeds) => {
-  // Не делаем ничего, данные уже отрисованы через state.js
-};
-
-export const renderPosts = (container, posts, onPreviewClick) => {
-  // Не делаем ничего, данные уже отрисованы через state.js
-};
+// Пустые функции, чтобы не затирать статические данные
+export const renderFeeds = () => {};
+export const renderPosts = () => {};
