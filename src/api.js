@@ -1,11 +1,9 @@
 import axios from 'axios';
 import parseRSS from './parser.js';
 
-const proxyUrl = 'https://allorigins.hexlet.app/get';
-
 export const loadRSS = (url) => {
-  const encodedUrl = encodeURIComponent(url);
-  const requestUrl = `${proxyUrl}?disableCache=true&url=${encodedUrl}`;
+  const proxyUrl = 'https://allorigins.hexlet.app/get';
+  const requestUrl = `${proxyUrl}?disableCache=true&url=${encodeURIComponent(url)}`;
   
   return axios.get(requestUrl)
     .then(response => {

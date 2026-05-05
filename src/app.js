@@ -26,7 +26,7 @@ const openModal = (post) => {
   const fullLink = modalElement.querySelector('.full-article-link');
   
   if (modalTitle) modalTitle.textContent = post.title;
-  if (modalBody) modalBody.innerHTML = `<p>${escapeHtml(post.description || 'Цель: Научиться извлекать из дерева необходимые данные')}</p>`;
+  if (modalBody) modalBody.innerHTML = `<p>${escapeHtml(post.description || headings.modalGoal)}</p>`;
   if (fullLink) fullLink.href = post.link;
   
   if (!state.readPosts.has(post.id)) {
@@ -71,19 +71,9 @@ const addRSS = (url) => {
       
       addFeed(newFeed);
       addPosts(newFeed.id, posts);
-      
-      // Сначала показываем сообщение об успехе
-      setSuccess('successLoad');
-      
-      // Затем обновляем интерфейс
+      setSuccess();
       updateUI();
-      
-      // Очищаем форму, НО НЕ СТИРАЕМ СООБЩЕНИЕ
-      if (formElements && formElements.input) {
-        formElements.input.value = '';
-        formElements.input.focus();
-      }
-      
+      resetForm();
       setStateError(null);
       return true;
     })
@@ -91,13 +81,13 @@ const addRSS = (url) => {
       let errorMessage;
       
       if (err.message === 'noValidRSS') {
-        errorMessage = 'Ресурс не содержит валидный RSS';
-      } else if (err.message === 'Network Error' || err.message === 'networkError') {
-        errorMessage = 'Ошибка сети';
+        errorMessage = headings.noValidRSS;
+      } else if (err.message === 'networkError') {
+        errorMessage = headings.networkError;
       } else if (err.name === 'ValidationError') {
         errorMessage = err.message;
       } else {
-        errorMessage = 'Ошибка сети';
+        errorMessage = headings.networkError;
       }
       
       setStateError(errorMessage);
@@ -119,7 +109,7 @@ const attachSubmitHandler = (form) => {
     if (url) {
       addRSS(url);
     } else {
-      setError('Не должно быть пустым');
+      setError(headings.notEmpty);
     }
   });
 };

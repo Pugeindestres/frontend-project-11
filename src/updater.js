@@ -31,7 +31,6 @@ const checkFeedForUpdates = (feed) => {
       
       if (newPosts.length > 0) {
         addPosts(feed.id, newPosts);
-        console.log(`Добавлено ${newPosts.length} новых постов из "${feed.title}"`);
         
         const postsContainer = document.getElementById('postsContainer');
         if (postsContainer) {
@@ -42,10 +41,7 @@ const checkFeedForUpdates = (feed) => {
       
       return newPosts.length;
     })
-    .catch((error) => {
-      console.error(`Ошибка при обновлении фида "${feed.url}":`, error);
-      return 0;
-    });
+    .catch(() => 0);
 };
 
 const updateAllFeeds = () => {
@@ -56,22 +52,11 @@ const updateAllFeeds = () => {
   }
   
   const promises = feedsToCheck.map(feed => checkFeedForUpdates(feed));
-  return Promise.all(promises)
-    .then(results => {
-      const totalNewPosts = results.reduce((sum, count) => sum + count, 0);
-      if (totalNewPosts > 0) {
-        console.log(`Всего добавлено ${totalNewPosts} новых постов`);
-      }
-    })
-    .catch(error => {
-      console.error('Ошибка при обновлении фидов:', error);
-    });
+  return Promise.all(promises);
 };
 
 const scheduleUpdate = (intervalMs = 5000) => {
-  if (updateTimeout) {
-    clearTimeout(updateTimeout);
-  }
+  if (updateTimeout) clearTimeout(updateTimeout);
   
   const tick = () => {
     if (isUpdating) {

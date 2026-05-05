@@ -19,13 +19,8 @@ const headings = {
   modalGoal: 'Цель: Научиться извлекать из дерева необходимые данные'
 };
 
-const getInputElement = () => {
-  return document.querySelector('#rssUrl');
-};
-
-const getSubmitButton = () => {
-  return document.querySelector('#submitBtn');
-};
+const getInputElement = () => document.querySelector('#rssUrl');
+const getSubmitButton = () => document.querySelector('#submitBtn');
 
 export const initForm = (container) => {
   if (!container) return null;
@@ -36,7 +31,7 @@ export const initForm = (container) => {
         <label for="rssUrl" class="form-label">${headings.rssLabel}</label>
         <div class="input-group">
           <input 
-            type="text" 
+            type="url" 
             class="form-control" 
             id="rssUrl" 
             name="url"
@@ -64,12 +59,10 @@ export const initForm = (container) => {
 
 export const setLoading = (isLoading) => {
   const btn = getSubmitButton();
-  if (btn) {
-    btn.disabled = isLoading;
-  }
+  if (btn) btn.disabled = isLoading;
 };
 
-export const setSuccess = (messageKey) => {
+export const setSuccess = () => {
   const feedback = document.getElementById('rssFeedback');
   if (feedback) {
     feedback.textContent = headings.successLoad;
@@ -77,10 +70,7 @@ export const setSuccess = (messageKey) => {
     feedback.classList.add('text-success');
     
     setTimeout(() => {
-      if (feedback && feedback.textContent === headings.successLoad) {
-        feedback.textContent = '';
-        feedback.classList.remove('text-success');
-      }
+      if (feedback) feedback.textContent = '';
     }, 5000);
   }
 };
@@ -89,9 +79,7 @@ export const setError = (message) => {
   const input = getInputElement();
   const feedback = document.getElementById('rssFeedback');
   
-  if (input) {
-    input.classList.add('is-invalid');
-  }
+  if (input) input.classList.add('is-invalid');
   if (feedback) {
     feedback.textContent = message;
     feedback.classList.remove('text-success');
@@ -110,9 +98,7 @@ export const clearError = () => {
   const input = getInputElement();
   const feedback = document.getElementById('rssFeedback');
   
-  if (input) {
-    input.classList.remove('is-invalid');
-  }
+  if (input) input.classList.remove('is-invalid');
   if (feedback && feedback.textContent !== headings.successLoad) {
     feedback.textContent = '';
     feedback.classList.remove('text-danger');
@@ -125,70 +111,59 @@ export const resetForm = () => {
     input.value = '';
     input.focus();
   }
+  clearError();
 };
 
 export const renderFeeds = (container, feeds) => {
   if (!container) return;
   
-  // Очищаем контейнер
-  container.innerHTML = '';
-  
-  // Создаём контейнер с классом "feeds"
-  const feedsContainer = document.createElement('div');
-  feedsContainer.className = 'feeds';
-  
   if (!feeds || feeds.length === 0) {
-    feedsContainer.innerHTML = `
-      <div class="card">
-        <div class="card-body">
-          <h3>${headings.feedsTitle}</h3>
-          <p class="text-muted">Нет добавленных RSS</p>
+    container.innerHTML = `
+      <div class="feeds">
+        <div class="card">
+          <div class="card-body">
+            <h3>${headings.feedsTitle}</h3>
+            <p class="text-muted">Нет добавленных RSS</p>
+          </div>
         </div>
       </div>
     `;
-    container.appendChild(feedsContainer);
     return;
   }
   
-  feedsContainer.innerHTML = `
-    <div class="card">
-      <div class="card-body">
-        <h3>${headings.feedsTitle}</h3>
-        <ul class="list-group">
-          ${feeds.map(feed => `
-            <li class="list-group-item">
-              <strong>${escapeHtml(feed.title)}</strong>
-              ${feed.description ? `<br><small class="text-muted">${escapeHtml(feed.description)}</small>` : ''}
-            </li>
-          `).join('')}
-        </ul>
+  container.innerHTML = `
+    <div class="feeds">
+      <div class="card">
+        <div class="card-body">
+          <h3>${headings.feedsTitle}</h3>
+          <ul class="list-group">
+            ${feeds.map(feed => `
+              <li class="list-group-item">
+                <strong>${escapeHtml(feed.title)}</strong>
+                ${feed.description ? `<br><small class="text-muted">${escapeHtml(feed.description)}</small>` : ''}
+              </li>
+            `).join('')}
+          </ul>
+        </div>
       </div>
     </div>
   `;
-  
-  container.appendChild(feedsContainer);
 };
 
 export const renderPosts = (container, posts, onPreviewClick) => {
   if (!container) return;
   
-  // Очищаем контейнер
-  container.innerHTML = '';
-  
-  // Создаём контейнер с классом "posts"
-  const postsContainer = document.createElement('div');
-  postsContainer.className = 'posts';
-  
   if (!posts || posts.length === 0) {
-    postsContainer.innerHTML = `
-      <div class="card">
-        <div class="card-body">
-          <h3>${headings.postsTitle}</h3>
-          <p class="text-muted">Нет постов</p>
+    container.innerHTML = `
+      <div class="posts">
+        <div class="card">
+          <div class="card-body">
+            <h3>${headings.postsTitle}</h3>
+            <p class="text-muted">Нет постов</p>
+          </div>
         </div>
       </div>
     `;
-    container.appendChild(postsContainer);
     return;
   }
   
@@ -196,48 +171,45 @@ export const renderPosts = (container, posts, onPreviewClick) => {
     new Date(b.pubDate) - new Date(a.pubDate)
   );
   
-  postsContainer.innerHTML = `
-    <div class="card">
-      <div class="card-body">
-        <h3>${headings.postsTitle}</h3>
-        ${sortedPosts.map(post => `
-          <div class="post-item mb-3 p-3 border rounded" data-post-id="${post.id}">
-            <div class="d-flex justify-content-between align-items-start">
-              <h4 class="post-title">
-                <a href="${post.link || '#'}" target="_blank" class="${post.isRead ? 'link-secondary' : 'fw-bold'}">
-                  ${escapeHtml(post.title)}
-                </a>
-              </h4>
-              <button class="btn btn-sm btn-outline-secondary preview-btn" data-post-id="${post.id}">
-                ${headings.previewButton}
-              </button>
+  container.innerHTML = `
+    <div class="posts">
+      <div class="card">
+        <div class="card-body">
+          <h3>${headings.postsTitle}</h3>
+          ${sortedPosts.map(post => `
+            <div class="post-item mb-3 p-3 border rounded" data-post-id="${post.id}">
+              <div class="d-flex justify-content-between align-items-start">
+                <h4 class="post-title">
+                  <a href="${post.link || '#'}" target="_blank" class="${post.isRead ? 'link-secondary' : 'fw-bold'}">
+                    ${escapeHtml(post.title)}
+                  </a>
+                </h4>
+                <button class="btn btn-sm btn-outline-secondary preview-btn" data-post-id="${post.id}">
+                  ${headings.previewButton}
+                </button>
+              </div>
+              <div class="post-meta text-muted small mt-2">
+                <span class="feed-title">${escapeHtml(post.feedTitle || '')}</span>
+                <span class="post-date ms-2">${formatDate(post.pubDate)}</span>
+              </div>
+              <p class="mt-2">${escapeHtml(post.description?.substring(0, 200) || '')}...</p>
             </div>
-            <div class="post-meta text-muted small mt-2">
-              <span class="feed-title">${escapeHtml(post.feedTitle || '')}</span>
-              <span class="post-date ms-2">${formatDate(post.pubDate)}</span>
-            </div>
-            <p class="mt-2">${escapeHtml(post.description?.substring(0, 200) || '')}...</p>
-          </div>
-        `).join('')}
+          `).join('')}
+        </div>
       </div>
     </div>
   `;
   
-  container.appendChild(postsContainer);
-  
   if (onPreviewClick) {
     document.querySelectorAll('.preview-btn').forEach(btn => {
-      btn.removeEventListener('click', btn._listener);
-      const handler = (e) => {
+      btn.addEventListener('click', (e) => {
         e.preventDefault();
         const postId = btn.dataset.postId;
         const post = sortedPosts.find(p => p.id === postId);
         if (post && onPreviewClick) {
           onPreviewClick(post);
         }
-      };
-      btn._listener = handler;
-      btn.addEventListener('click', handler);
+      });
     });
   }
 };
