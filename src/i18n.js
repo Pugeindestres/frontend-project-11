@@ -3,10 +3,8 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import * as yup from 'yup';
 import resources from './locales/index.js';
 
-const i18n = i18next.createInstance();
-
 export default async () => {
-  await i18n.use(LanguageDetector).init({
+  await i18next.use(LanguageDetector).init({
     resources,
     fallbackLng: 'ru',
     detection: {
@@ -24,5 +22,5 @@ export default async () => {
     },
   });
 
-  return i18n;
+  return i18next;
 };
