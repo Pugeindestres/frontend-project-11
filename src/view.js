@@ -52,7 +52,7 @@ export const renderFeeds = (feeds) => {
     <div class="card-body">
       <h2 class="card-title h4">${i18next.t('titles.feeds')}</h2>
       <ul class="list-group border-0">
-        ${feeds.map((feed) => `
+        ${feeds.map(feed => `
           <li class="list-group-item border-0 border-end-0">
             <h3 class="h6 m-0">${feed.title}</h3>
             <p class="m-0 small text-black-50">${feed.description}</p>
@@ -72,7 +72,7 @@ export const renderPosts = (posts, onPreview) => {
     <div class="card-body">
       <h2 class="card-title h4">${i18next.t('titles.posts')}</h2>
       <ul class="list-group border-0 rounded-0">
-        ${posts.map((post) => `
+        ${posts.map(post => `
           <li class="list-group-item d-flex justify-content-between align-items-start border-0 border-end-0">
             <a
               href="${post.link}"
@@ -94,10 +94,10 @@ export const renderPosts = (posts, onPreview) => {
     </div>
   `
 
-  container.querySelectorAll('button[data-id]').forEach((btn) => {
+  container.querySelectorAll('button[data-id]').forEach(btn => {
     btn.addEventListener('click', () => {
       const postId = btn.getAttribute('data-id')
-      const post = posts.find((p) => p.id === postId)
+      const post = posts.find(p => p.id === postId)
       if (post && onPreview) onPreview(post)
     })
   })

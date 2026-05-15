@@ -1,4 +1,4 @@
-export default (xmlString) => {
+export default xmlString => {
   const parser = new DOMParser()
   const xmlDoc = parser.parseFromString(xmlString, 'text/xml')
 
@@ -14,7 +14,7 @@ export default (xmlString) => {
   const feedTitle = channel.querySelector('title')?.textContent?.trim() || ''
   const feedDescription = channel.querySelector('description')?.textContent?.trim() || ''
 
-  const posts = Array.from(channel.querySelectorAll('item')).map((item) => ({
+  const posts = Array.from(channel.querySelectorAll('item')).map(item => ({
     title: item.querySelector('title')?.textContent?.trim() || '',
     link: item.querySelector('link')?.textContent?.trim() || '',
     description: item.querySelector('description')?.textContent?.trim() || '',

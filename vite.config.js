@@ -7,7 +7,7 @@ export default defineConfig({
       '/proxy': {
         target: 'https://allorigins.hexlet.app',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/proxy/, ''),
+        rewrite: path => path.replace(/^\/proxy/, ''),
       },
     },
   },

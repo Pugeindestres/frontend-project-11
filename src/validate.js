@@ -1,7 +1,7 @@
 import * as yup from 'yup'
 
-export default (feeds) =>
+export default feeds =>
   yup.string()
     .required('notEmpty')
     .url('invalidUrl')
-    .notOneOf(feeds.map((feed) => feed.url), 'alreadyExists')
+    .notOneOf(feeds.map(feed => feed.url), 'alreadyExists')

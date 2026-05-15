@@ -22,16 +22,16 @@ subscribe(state, () => {
 })
 
 export const addFeed = (feed) => {
-  if (!state.feeds.some((f) => f.url === feed.url)) {
+  if (!state.feeds.some(f => f.url === feed.url)) {
     state.feeds.push(feed)
   }
 }
 
 export const addPosts = (feedId, newPosts) => {
-  const existingLinks = new Set(state.posts.map((p) => p.link))
+  const existingLinks = new Set(state.posts.map(p => p.link))
   const postsToAdd = newPosts
-    .filter((post) => !existingLinks.has(post.link))
-    .map((post) => ({
+    .filter(post => !existingLinks.has(post.link))
+    .map(post => ({
       ...post,
       id: crypto.randomUUID ? crypto.randomUUID() : `${feedId}_${Date.now()}_${Math.random()}`,
       feedId,
@@ -50,7 +50,7 @@ export const markAsRead = (postId) => {
 }
 
 export const getPostsWithReadStatus = () =>
-  state.posts.map((post) => ({
+  state.posts.map(post => ({
     ...post,
     isRead: state.readPosts.has(post.id),
   }))

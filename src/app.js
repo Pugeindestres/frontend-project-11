@@ -6,7 +6,7 @@ import { startUpdater, stopUpdater } from './updater.js'
 
 const updateUI = () => {
   renderFeeds(getFeeds())
-  renderPosts(getPostsWithReadStatus(), (post) => {
+  renderPosts(getPostsWithReadStatus(), post => {
     markAsRead(post.id)
     openModal(post)
   })
@@ -58,7 +58,7 @@ export default () => {
 
   watch(() => {
     const posts = getPostsWithReadStatus()
-    renderPosts(posts, (post) => {
+    renderPosts(posts, post => {
       markAsRead(post.id)
       openModal(post)
     })

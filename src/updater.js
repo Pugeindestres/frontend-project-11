@@ -14,7 +14,7 @@ export const startUpdater = (interval = 5000) => {
     }
     updating = true
 
-    Promise.all(state.feeds.map((feed) =>
+    Promise.all(state.feeds.map(feed =>
       loadRSS(feed.url).then(({ posts }) => {
         addPosts(feed.id, posts)
       }).catch(() => {}),
