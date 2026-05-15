@@ -97,7 +97,7 @@ export const renderPosts = (posts, onPreview) => {
   container.querySelectorAll('button[data-id]').forEach(btn => {
     btn.addEventListener('click', () => {
       const postId = btn.getAttribute('data-id')
-      const post = posts.find(p => p.id === postId)
+      const post = posts.find((p) => p.id === postId)
       if (post && onPreview) onPreview(post)
     })
   })
