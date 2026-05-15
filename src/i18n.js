@@ -10,18 +10,18 @@ export default async () => {
     resources,
     fallbackLng: 'ru',
     detection: {
-      order: ['localStorage', 'navigator']
-    }
+      order: ['localStorage', 'navigator'],
+    },
   });
 
   yup.setLocale({
     mixed: {
-      required: () => ({ key: 'notEmpty' }),
-      notOneOf: () => ({ key: 'alreadyExists' })
+      required: () => 'notEmpty',
+      notOneOf: () => 'alreadyExists',
     },
     string: {
-      url: () => ({ key: 'invalidUrl' })
-    }
+      url: () => 'invalidUrl',
+    },
   });
 
   return i18n;
