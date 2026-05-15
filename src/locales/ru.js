@@ -22,4 +22,4 @@ export default {
       rss: 'Ссылка RSS',
     },
   },
-};
+}

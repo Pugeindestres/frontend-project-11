@@ -1,53 +1,53 @@
-import i18next from 'i18next';
-import { Modal } from 'bootstrap';
+import i18next from 'i18next'
+import { Modal } from 'bootstrap'
 
-const getInput = () => document.querySelector('#url-input');
-const getSubmitBtn = () => document.querySelector('button[type="submit"]');
-const getFeedback = () => document.querySelector('.feedback');
+const getInput = () => document.querySelector('#url-input')
+const getSubmitBtn = () => document.querySelector('button[type="submit"]')
+const getFeedback = () => document.querySelector('.feedback')
 
 export const initForm = () => {
-  const input = getInput();
-  const submitBtn = getSubmitBtn();
-  const feedback = getFeedback();
-  return { input, submitBtn, feedback };
-};
+  const input = getInput()
+  const submitBtn = getSubmitBtn()
+  const feedback = getFeedback()
+  return { input, submitBtn, feedback }
+}
 
 export const setLoading = (isLoading) => {
-  const btn = getSubmitBtn();
-  if (btn) btn.disabled = isLoading;
-};
+  const btn = getSubmitBtn()
+  if (btn) btn.disabled = isLoading
+}
 
 export const renderSuccess = () => {
-  const input = getInput();
-  const feedback = getFeedback();
+  const input = getInput()
+  const feedback = getFeedback()
   if (input) {
-    input.classList.remove('is-invalid');
-    input.value = '';
-    input.focus();
+    input.classList.remove('is-invalid')
+    input.value = ''
+    input.focus()
   }
   if (feedback) {
-    feedback.textContent = i18next.t('statusMessage.success');
-    feedback.classList.remove('text-danger');
-    feedback.classList.add('text-success');
+    feedback.textContent = i18next.t('statusMessage.success')
+    feedback.classList.remove('text-danger')
+    feedback.classList.add('text-success')
   }
-};
+}
 
 export const renderError = (errorKey) => {
-  const input = getInput();
-  const feedback = getFeedback();
-  if (input) input.classList.add('is-invalid');
+  const input = getInput()
+  const feedback = getFeedback()
+  if (input) input.classList.add('is-invalid')
   if (feedback) {
-    feedback.textContent = i18next.t(`statusMessage.${errorKey}`);
-    feedback.classList.remove('text-success');
-    feedback.classList.add('text-danger');
+    feedback.textContent = i18next.t(`statusMessage.${errorKey}`)
+    feedback.classList.remove('text-success')
+    feedback.classList.add('text-danger')
   }
-};
+}
 
 export const renderFeeds = (feeds) => {
-  const container = document.querySelector('.feeds');
-  if (!container) return;
+  const container = document.querySelector('.feeds')
+  if (!container) return
 
-  const card = container.querySelector('.card') || container;
+  const card = container.querySelector('.card') || container
   card.innerHTML = `
     <div class="card-body">
       <h2 class="card-title h4">${i18next.t('titles.feeds')}</h2>
@@ -60,14 +60,14 @@ export const renderFeeds = (feeds) => {
         `).join('')}
       </ul>
     </div>
-  `;
-};
+  `
+}
 
 export const renderPosts = (posts, onPreview) => {
-  const container = document.querySelector('.posts');
-  if (!container) return;
+  const container = document.querySelector('.posts')
+  if (!container) return
 
-  const card = container.querySelector('.card') || container;
+  const card = container.querySelector('.card') || container
   card.innerHTML = `
     <div class="card-body">
       <h2 class="card-title h4">${i18next.t('titles.posts')}</h2>
@@ -92,25 +92,25 @@ export const renderPosts = (posts, onPreview) => {
         `).join('')}
       </ul>
     </div>
-  `;
+  `
 
   container.querySelectorAll('button[data-id]').forEach((btn) => {
     btn.addEventListener('click', () => {
-      const postId = btn.getAttribute('data-id');
-      const post = posts.find((p) => p.id === postId);
-      if (post && onPreview) onPreview(post);
-    });
-  });
-};
+      const postId = btn.getAttribute('data-id')
+      const post = posts.find((p) => p.id === postId)
+      if (post && onPreview) onPreview(post)
+    })
+  })
+}
 
 export const openModal = (post) => {
-  const modalEl = document.getElementById('modal');
-  if (!modalEl) return;
+  const modalEl = document.getElementById('modal')
+  if (!modalEl) return
 
-  modalEl.querySelector('.modal-title').textContent = post.title;
-  modalEl.querySelector('.modal-body').textContent = post.description;
-  modalEl.querySelector('.full-article').href = post.link;
+  modalEl.querySelector('.modal-title').textContent = post.title
+  modalEl.querySelector('.modal-body').textContent = post.description
+  modalEl.querySelector('.full-article').href = post.link
 
-  const modal = Modal.getOrCreateInstance(modalEl);
-  modal.show();
-};
+  const modal = Modal.getOrCreateInstance(modalEl)
+  modal.show()
+}

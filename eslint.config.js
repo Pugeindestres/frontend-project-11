@@ -1,4 +1,4 @@
-import globals from 'globals';
+import globals from 'globals'
 
 export default [
   {
@@ -14,11 +14,11 @@ export default [
     },
     rules: {
       'no-console': 'off',
-      'semi': ['error', 'always'],
-      'quotes': ['error', 'single'],
-      'indent': ['error', 2],
-      'no-unused-vars': ['warn', { 'argsIgnorePattern': '^_' }],
+      semi: ['error', 'always'],
+      quotes: ['error', 'single'],
+      indent: ['error', 2],
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       'no-undef': 'error',
     },
   },
-];
+]
